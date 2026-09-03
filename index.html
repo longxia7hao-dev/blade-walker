@@ -8,12 +8,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#0b0610" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="description" content="魔刃行者：為手機打造的 3D 斬魔冒險遊戲。" />
     <title>魔刃行者</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="./icons/icon-192.png" />
-    <script type="module" crossorigin src="./assets/index-DLPHo56W.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BqRZqu-v.css">
+    <script type="module" crossorigin src="./assets/index-CKnjKJfn.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-dXUeL_Dn.css">
   </head>
   <body>
     <div id="game-root">
@@ -21,8 +22,8 @@
         <img id="world-bg-img" src="./art/world-path.jpg" alt="" />
       </div>
       <div id="path-strip" aria-hidden="true"></div>
-      <canvas id="scene"></canvas>
-      <canvas id="fx"></canvas>
+      <canvas id="scene" role="application" aria-label="魔刃行者戰鬥畫面"></canvas>
+      <canvas id="fx" aria-hidden="true"></canvas>
       <div id="weapon-layer" aria-hidden="true">
         <div id="weapon-wrap" class="sword" data-char="sword">
           <img id="weapon-art" alt="" hidden />
@@ -61,7 +62,7 @@
         <div class="hud-top">
           <div class="hud-hp">
             <div class="party-icon" aria-hidden="true">
-              <img id="party-portrait" src="./art/baishuang.png" alt="" />
+              <img id="party-portrait" src="./art/baishuang.webp" alt="" />
             </div>
             <div>
               <span class="hud-label">生命</span>
@@ -185,13 +186,26 @@
         </div>
       </div>
 
-      <div id="model-loading" aria-live="polite">
-        <p>載入模型…</p>
+      <div id="model-loading" role="status" aria-live="polite" aria-label="遊戲載入中">
+        <div class="loading-content">
+          <span class="loading-rune" aria-hidden="true"></span>
+          <p>展開獵魔卷軸…</p>
+          <small>首次載入後即可更快進入</small>
+        </div>
+      </div>
+      <div id="runtime-issue" class="runtime-issue hidden" role="alert" aria-live="assertive">
+        <div class="runtime-card">
+          <p class="result-kicker dark">SYSTEM NOTICE</p>
+          <h2 id="runtime-issue-title">無法啟用 3D 畫面</h2>
+          <p id="runtime-issue-body" class="panel-sub"></p>
+          <button id="btn-runtime-reload" class="cta gem-btn" type="button">重新載入</button>
+        </div>
       </div>
       <div id="install-hint" class="install-hint hidden" role="status">
         <span>主畫面：Safari 點「分享」→「加入主畫面」即可全螢幕遊玩</span>
         <button id="btn-dismiss-install" type="button" aria-label="關閉">✕</button>
       </div>
     </div>
+    <noscript>《魔刃行者》需要啟用 JavaScript 才能遊玩。</noscript>
   </body>
 </html>
