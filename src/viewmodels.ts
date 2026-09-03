@@ -61,12 +61,21 @@ export class Viewmodels {
 
   attachLoaded(): void {
     let changed = false;
-    // QA: frost_blade cut punches through title/char FP view. Keep procedural until modeler recuts.
-    if (this.swordGlb) {
-      this.sword.remove(this.swordGlb);
-      this.swordGlb = null;
-      this.swordProc.visible = true;
-      changed = true;
+    if (!this.swordGlb && hasModel('frost_blade')) {
+      const model = cloneModel('frost_blade');
+      if (model) {
+        const wrap = new THREE.Group();
+        // The source is authored along +Y. Keep the hilt in the lower-right
+        // safe area and cant the blade away from the near plane.
+        wrap.rotation.set(-0.08, -0.08, -0.3);
+        wrap.scale.setScalar(1.16);
+        wrap.position.set(0.01, -0.03, -0.08);
+        wrap.add(model);
+        this.swordGlb = wrap;
+        this.sword.add(wrap);
+        this.swordProc.visible = false;
+        changed = true;
+      }
     }
     if (!this.gunGlb && hasModel('flame_pistol')) {
       const model = cloneModel('flame_pistol');

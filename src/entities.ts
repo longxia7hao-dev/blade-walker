@@ -416,6 +416,24 @@ function wrapGlb(model: THREE.Group, scale: number, blobR: number, withAura: boo
   g.userData.glbScale = s;
   g.userData.body = visual;
 
+  const sigil = new THREE.Mesh(
+    new THREE.RingGeometry(blobR * 0.72, blobR * 1.04, withAura ? 40 : 28),
+    new THREE.MeshBasicMaterial({
+      color: withAura ? 0xe5c66d : 0x5bc7d9,
+      transparent: true,
+      opacity: withAura ? 0.24 : 0.1,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+    }),
+  );
+  sigil.rotation.x = -Math.PI / 2;
+  sigil.position.y = 0.028;
+  sigil.renderOrder = 1;
+  g.add(sigil);
+  g.userData.sigil = sigil;
+  g.userData.sigilBaseOpacity = withAura ? 0.24 : 0.1;
+
   if (withAura) {
     const ptsGeo = new THREE.BufferGeometry();
     const n = 28;
@@ -440,6 +458,10 @@ function wrapGlb(model: THREE.Group, scale: number, blobR: number, withAura: boo
     );
     g.add(aura);
     g.userData.aura = aura;
+    const auraLight = new THREE.PointLight(0x6bdff2, 0.82, 5.8, 2);
+    auraLight.position.set(0, 1.05, 0.25);
+    g.add(auraLight);
+    g.userData.auraLight = auraLight;
   }
   g.add(blob(blobR));
   return g;
@@ -618,13 +640,40 @@ export function updateMonster(m: Monster, dt: number, hold = false, playerX = 0)
   flashBody(m);
   const aura = m.mesh.userData.aura as THREE.Points | undefined;
   if (aura) aura.rotation.y += dt * 0.7;
+  const auraLight = m.mesh.userData.auraLight as THREE.PointLight | undefined;
+  if (auraLight) {
+    auraLight.intensity = 0.76 + Math.sin(m.t * 3.1) * 0.18 + (m.hitFlash > 0 ? 0.65 : 0);
+    auraLight.color.setHex(m.hitFlash > 0 ? 0xffcf87 : m.slowT > 0 ? 0x8cecff : 0x6bdff2);
+  }
+  const sigil = m.mesh.userData.sigil as THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | undefined;
+  if (sigil) {
+    sigil.rotation.z += dt * (m.isBoss ? 0.42 : 0.2);
+    const baseOpacity = (m.mesh.userData.sigilBaseOpacity as number | undefined) ?? 0.1;
+    const goblinAim = m.kind === 'goblin' && m.committed && m.shootCd < 0.42
+      ? 1 - Math.max(0, m.shootCd) / 0.42
+      : 0;
+    const bossTell = m.isBoss && m.telegraph > 0 ? 0.34 : 0;
+    sigil.material.opacity = baseOpacity + goblinAim * 0.62 + bossTell;
+    sigil.material.color.setHex(goblinAim > 0 ? 0xffcf66 : m.isBoss ? 0xe5c66d : 0x5bc7d9);
+    const pulse = 1 + Math.sin(m.t * (m.isBoss ? 3.2 : 5.2)) * 0.035 + goblinAim * 0.18;
+    sigil.scale.setScalar(pulse);
+  }
   const vis = m.mesh.userData.glbVisual as THREE.Group | undefined;
   if (vis) {
     const base = (m.mesh.userData.glbScale as number) || 1;
-    const b = 1 + Math.sin(m.t * 2.1) * 0.03;
-    const s = base * b;
-    if (Number.isFinite(s)) vis.scale.setScalar(s);
+    const breath = Math.sin(m.t * (m.kind === 'goblin' ? 5.4 : 2.1));
+    if (m.kind === 'slime' || m.kind === 'bossSlime' || m.kind === 'miniSlime') {
+      const squash = breath * 0.045;
+      vis.scale.set(base * (1 + squash), base * (1 - squash * 1.45), base * (1 + squash));
+    } else {
+      const s = base * (1 + breath * 0.025);
+      if (Number.isFinite(s)) vis.scale.setScalar(s);
+    }
     vis.position.y = Math.sin(m.t * 1.7) * 0.035;
+    if (m.kind === 'goblin') {
+      vis.rotation.z = Math.sin(m.t * 8.4 + m.seed) * 0.045;
+      vis.rotation.x = 0.06 + Math.sin(m.t * 4.2 + m.seed) * 0.025;
+    }
     const y = Math.atan2(playerX - m.pos.x, 0.35 - m.pos.z) + Math.PI;
     if (Number.isFinite(y)) m.mesh.rotation.y = y;
   } else if (aura) {
@@ -676,8 +725,10 @@ export function updateMonster(m: Monster, dt: number, hold = false, playerX = 0)
         const base = (m.mesh.userData.glbScale as number) || 1;
         const b = 1 + Math.sin(m.t * 2.1) * 0.03;
         const hop = 1 + Math.sin(hopT * Math.PI) * 0.08;
-        const s = base * b * hop;
-        if (Number.isFinite(s)) vis.scale.setScalar(s);
+        const stretch = Math.sin(hopT * Math.PI);
+        const side = base * b * (1 + stretch * 0.1);
+        const tall = base * b * hop * (1 - stretch * 0.13);
+        if (Number.isFinite(side) && Number.isFinite(tall)) vis.scale.set(side, tall, side);
       }
     } else {
       m.mesh.scale.set(1 + Math.sin(hopT * Math.PI) * 0.08, 1 - Math.sin(hopT * Math.PI) * 0.14, 1);
@@ -690,6 +741,10 @@ export function updateMonster(m: Monster, dt: number, hold = false, playerX = 0)
   } else if (m.kind === 'beetle') {
     m.pos.x = THREE.MathUtils.damp(m.pos.x, targetX, xDamp, dt);
     m.pos.y = 0.02 + Math.sin(m.t * 10) * 0.04;
+    m.pos.z += speed * dt * rush;
+  } else if (m.kind === 'goblin') {
+    m.pos.x = THREE.MathUtils.damp(m.pos.x, targetX, xDamp, dt) + Math.sin(m.t * 2.6 + m.seed) * wobble;
+    m.pos.y = Math.abs(Math.sin(m.t * 4.2)) * 0.1;
     m.pos.z += speed * dt * rush;
   } else {
     m.pos.x = THREE.MathUtils.damp(m.pos.x, targetX, xDamp, dt) + Math.sin(m.t * 2 + m.seed) * wobble;

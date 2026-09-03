@@ -75,8 +75,7 @@ const loaderReady = Promise.resolve(MeshoptDecoder.ready as Promise<unknown>)
 const _box = new THREE.Box3();
 
 const CHARACTER_MODELS: Record<CharId, ModelId[]> = {
-  // 白霜目前沿用已校正的程序式第一人稱武器，避免舊 GLB 穿出鏡頭。
-  sword: [],
+  sword: ['frost_blade'],
   gun: ['flame_pistol'],
   mage: ['azure_staff'],
 };
@@ -98,13 +97,41 @@ function prepare(root: THREE.Object3D, id?: ModelId): void {
     for (const raw of mats) {
       const mat = raw as THREE.MeshStandardMaterial;
       if (!mat) continue;
-      if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
+      if (mat.map) {
+        mat.map.colorSpace = THREE.SRGBColorSpace;
+        mat.map.anisotropy = 4;
+      }
       if (mat.emissiveMap) mat.emissiveMap.colorSpace = THREE.SRGBColorSpace;
       if (mat.normalMap) wantsTangent = true;
-      if (id === 'slime' && mat.emissive) {
-        mat.emissive.set(0, 0, 0);
-        mat.emissiveIntensity = 0;
+      if (!mat.isMeshStandardMaterial) continue;
+
+      const materialName = `${mesh.name} ${mat.name}`.toLowerCase();
+      mat.envMapIntensity = 1.15;
+
+      if (materialName.includes('metal')) {
+        mat.metalness = 0.84;
+        mat.roughness = 0.26;
+        mat.envMapIntensity = 1.65;
+      } else if (materialName.includes('glow')) {
+        mat.metalness = 0.22;
+        mat.roughness = 0.18;
+        mat.emissive.setHex(id === 'frost_blade' ? 0x63dfff : 0x52d6d0);
+        mat.emissiveIntensity = id === 'frost_blade' ? 2.35 : 1.35;
+        mat.toneMapped = false;
+      } else if (id === 'slime' || id === 'slime_king' || id === 'gel_shield') {
+        mat.metalness = 0.06;
+        mat.roughness = 0.3;
+        mat.envMapIntensity = 1.4;
+        mat.emissive.setHex(id === 'slime_king' ? 0x123b45 : 0x082f30);
+        mat.emissiveIntensity = id === 'slime_king' ? 0.42 : 0.22;
+      } else if (id === 'goblin') {
+        mat.metalness = Math.min(mat.metalness, 0.16);
+        mat.roughness = 0.58;
+        mat.envMapIntensity = 1.05;
+      } else {
+        mat.roughness = THREE.MathUtils.clamp(mat.roughness, 0.32, 0.78);
       }
+      mat.needsUpdate = true;
     }
     if (
       wantsTangent &&

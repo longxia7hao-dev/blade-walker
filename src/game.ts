@@ -75,6 +75,7 @@ import {
 } from './models';
 import { isPhone, pinRoot, bindViewport, unlockAudioOnGesture } from './mobile';
 import { hideRuntimeIssue, showRuntimeIssue } from './runtime-ui';
+import { PostFx } from './postfx';
 
 interface SlashPt { x: number; y: number; life: number }
 interface Tracer { x0: number; y0: number; x1: number; y1: number; life: number }
@@ -104,6 +105,7 @@ interface Wave {
 
 export class Game {
   private renderer: THREE.WebGLRenderer;
+  private post: PostFx | null = null;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private world: World;
@@ -269,6 +271,7 @@ export class Game {
     this.world.applyStage(STAGES[0]);
     this.view = new Viewmodels(this.camera);
     this.view.show('sword');
+    this.rebuildPostFx();
     this.bootAssets();
     this.input.attach(canvas);
     this.bindUi();
@@ -534,6 +537,7 @@ export class Game {
       }
     }
     this.world.applyStage(STAGES[this.stage]);
+    this.root.dataset.stage = String(this.stage);
     this.world.showFork(null);
     this.view.show(this.char);
     this.audio.setMode('battle', this.stage);
@@ -612,6 +616,7 @@ export class Game {
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(this.pixelCap);
     this.renderer.setSize(w, h, true);
+    this.post?.resize(w, h, this.pixelCap, this.lowQuality);
     const dpr = this.pixelCap;
     this.fx.width = Math.floor(w * dpr);
     this.fx.height = Math.floor(h * dpr);
@@ -626,6 +631,8 @@ export class Game {
     const lost = !gl || gl.isContextLost() || this.renderer.domElement !== canvas;
     if (lost) {
       try { this.renderer.dispose(); } catch { /* ignore */ }
+      try { this.post?.dispose(); } catch { /* ignore */ }
+      this.post = null;
       this.renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: !this.lowQuality,
@@ -654,6 +661,7 @@ export class Game {
         pmrem.dispose();
         oldEnv?.dispose();
       } catch { /* ignore */ }
+      this.rebuildPostFx();
       this.resize();
     }
     if (!this.world || !this.view) return;
@@ -810,7 +818,8 @@ export class Game {
     this.updateSparks(visDt);
     this.drawFx(visDt);
     this.renderer.setClearColor(this.world.fogColor, 1);
-    this.renderer.render(this.scene, this.camera);
+    if (this.post) this.post.render();
+    else this.renderer.render(this.scene, this.camera);
     this.runtimeErrors = 0;
     } catch (err) {
       console.error(err);
@@ -829,6 +838,17 @@ export class Game {
       try { this.input.endFrame(); } catch { /* ignore */ }
     }
   };
+
+  private rebuildPostFx(): void {
+    try {
+      this.post?.dispose();
+      this.post = new PostFx(this.renderer, this.scene, this.camera, this.lowQuality);
+      if (this.vw > 1 && this.vh > 1) this.post.resize(this.vw, this.vh, this.pixelCap, this.lowQuality);
+    } catch (error) {
+      console.warn('Cinematic post-processing unavailable; using direct render.', error);
+      this.post = null;
+    }
+  }
 
   private updateDodge(dtRaw: number): void {
     if (this.forkT > 0) {
@@ -1127,6 +1147,7 @@ export class Game {
     this.audio.setMode('boss', enc.kind);
     this.audio.setTheme(this.char, 'thin');
     this.audio.boss();
+    this.world.flashStorm(enc.mini ? 0.82 : 1.3);
     this.ui.setArena(enc.mini ? 'mini' : 'boss', enc.name);
     this.ui.float(enc.mini ? '小魔王' : '魔王戰', 0.5, 0.36, 'gold');
   }
@@ -1926,6 +1947,7 @@ export class Game {
     if (!m.alive || m.untargetable) return;
     m.hp -= dmg;
     m.hitFlash = 1;
+    if (this.stage === 0 && (m.isBoss || kind !== 'ok')) this.world.flashStorm(m.isBoss ? 0.42 : 0.24);
     if (m.kind === 'bossDemon' && (m.phase === 10 || m.phase === 11)) {
       m.chargeDmg += dmg;
       if (m.phase === 10 && m.chargeDmg >= 3) {
@@ -2228,16 +2250,17 @@ export class Game {
     for (let i = 0; i < n; i++) {
       const ox = n === 2 ? (i === 0 ? -0.7 : 0.7) : 0;
       const mesh = new THREE.Mesh(
-        new THREE.TorusGeometry(1.15, 0.055, 6, 18, Math.PI),
+        new THREE.TorusGeometry(1.2, 0.042, 8, 36, Math.PI * 1.16),
         new THREE.MeshBasicMaterial({
           color: 0xa8f4ff,
           transparent: true,
-          opacity: 0.85,
+          opacity: 0.92,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
+          toneMapped: false,
         }),
       );
-      mesh.rotation.x = Math.PI / 2;
+      mesh.rotation.z = -0.08 + (n === 2 ? (i === 0 ? -0.13 : 0.13) : 0);
       const pos = new THREE.Vector3(this.camX + ox, 0.85, -2.2);
       mesh.position.copy(pos);
       this.scene.add(mesh);
@@ -2260,7 +2283,7 @@ export class Game {
       w.life -= dt;
       w.pos.addScaledVector(w.vel, dt);
       w.mesh.position.copy(w.pos);
-      w.mesh.rotation.z += dt * 8;
+      w.mesh.rotation.z += dt * 1.4;
       const mat = (w.mesh as THREE.Mesh).material as THREE.MeshBasicMaterial;
       mat.opacity = Math.max(0, w.life * 1.3);
       for (const m of this.monsters) {

@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicDir = path.join(root, 'public');
 const index = await readFile(path.join(root, 'index.html'), 'utf8');
+const styles = await readFile(path.join(root, 'src', 'style.css'), 'utf8');
 
 const failures = [];
 const ok = (condition, message) => {
@@ -35,6 +36,9 @@ ok(rules.goblinSpawnChance(1, 0.1, 'normal') === 0.14, '第二關哥布林機率
 ok(rules.goblinSpawnChance(2, 0.1, 'treasure') === 0.08, '第三關寶庫哥布林機率異常');
 ok(rules.goblinSpawnChance(2, 0.1, 'easy') === 0, '緩坡不應生成哥布林');
 ok(rules.CHARGE_LOCK_Z < rules.HIT_Z, '敵人鎖定距離必須早於受擊平面');
+ok(rules.STAGES[0].fog < 0x304050, '暴風小徑應維持低明度風暴霧色');
+ok(sourceText.includes('UnrealBloomPass'), '電影感後製應包含 bloom pass');
+ok(sourceText.includes('storm-path-albedo.webp'), '暴風小徑應使用重製石徑材質');
 
 let storedSave = JSON.stringify({
   unlockedStage: 99,
@@ -74,6 +78,9 @@ for (const match of sourceText.matchAll(/['"]\.\/(art|models)\/([^'"]+)['"]/g)) 
   assetRefs.add(path.join(match[1], match[2]));
 }
 for (const match of index.matchAll(/(?:src|href)="\.\/(art|models)\/([^"]+)"/g)) {
+  assetRefs.add(path.join(match[1], match[2]));
+}
+for (const match of styles.matchAll(/url\(["']?\/(art|models)\/([^"')]+)["']?\)/g)) {
   assetRefs.add(path.join(match[1], match[2]));
 }
 for (const ref of assetRefs) {
