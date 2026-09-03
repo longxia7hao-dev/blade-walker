@@ -1,4 +1,4 @@
-const CACHE = 'blade-walker-v54';
+const CACHE = 'blade-walker-v55';
 const PRECACHE = [
   './',
   './index.html',
