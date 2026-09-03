@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import type { CharId, StageId } from './types';
 
 export type ModelId =
   | 'frost_blade'
@@ -60,8 +61,31 @@ export const MODEL_HEIGHTS: Partial<Record<ModelId, number>> = {
 
 const cache = new Map<ModelId, THREE.Group>();
 const heightCache = new Map<ModelId, number>();
-let preloadOnce: Promise<void> | null = null;
+const modelLoads = new Map<ModelId, Promise<void>>();
+const loader = new GLTFLoader();
+const loaderReady = Promise.resolve(MeshoptDecoder.ready as Promise<unknown>)
+  .catch(() => undefined)
+  .then(() => {
+    try {
+      loader.setMeshoptDecoder(MeshoptDecoder);
+    } catch (err) {
+      console.warn('meshopt decoder unavailable', err);
+    }
+  });
 const _box = new THREE.Box3();
+
+const CHARACTER_MODELS: Record<CharId, ModelId[]> = {
+  // 白霜目前沿用已校正的程序式第一人稱武器，避免舊 GLB 穿出鏡頭。
+  sword: [],
+  gun: ['flame_pistol'],
+  mage: ['azure_staff'],
+};
+
+const STAGE_MODELS: Record<StageId, ModelId[]> = {
+  0: ['slime', 'ghost', 'beetle', 'pumpkin', 'gel_shield', 'slime_king', 'goblin', 'heart_crystal', 'chest'],
+  1: ['slime', 'ghost', 'beetle', 'pumpkin', 'ghost_king', 'goblin', 'heart_crystal', 'chest'],
+  2: ['slime', 'ghost', 'beetle', 'pumpkin', 'demon_lieutenant', 'demon_king', 'goblin', 'heart_crystal', 'chest'],
+};
 
 function prepare(root: THREE.Object3D, id?: ModelId): void {
   root.traverse((o) => {
@@ -121,6 +145,9 @@ export function cloneModel(id: ModelId): THREE.Group | null {
   g.traverse((o) => {
     const mesh = o as THREE.Mesh;
     if (!mesh.isMesh) return;
+    // Geometry comes from the persistent model cache. Instance cleanup may
+    // dispose cloned materials, but must leave this shared geometry intact.
+    mesh.userData.sharedModelGeometry = true;
     if (Array.isArray(mesh.material)) mesh.material = mesh.material.map((m) => m.clone());
     else if (mesh.material) mesh.material = (mesh.material as THREE.Material).clone();
   });
@@ -213,39 +240,71 @@ export function makeInstancedMesh(id: ModelId, count: number): THREE.InstancedMe
   return inst;
 }
 
-export function preloadModels(): Promise<void> {
-  if (preloadOnce) return preloadOnce;
-  const loader = new GLTFLoader();
-  const ids = Object.keys(MODEL_URLS) as ModelId[];
-  preloadOnce = Promise.resolve(MeshoptDecoder.ready as Promise<unknown>)
-    .catch(() => undefined)
-    .then(() => {
-      try {
-        loader.setMeshoptDecoder(MeshoptDecoder);
-      } catch (err) {
-        console.warn('meshopt decoder unavailable', err);
-      }
-      return Promise.all(
-        ids.map(
-          (id) =>
-            new Promise<void>((resolve) => {
-              loader.load(
-                MODEL_URLS[id],
-                (gltf) => {
-                  prepare(gltf.scene, id);
-                  cache.set(id, gltf.scene);
-                  heightCache.set(id, measureHeight(gltf.scene));
-                  resolve();
-                },
-                undefined,
-                (err) => {
-                  console.warn('GLB load failed', id, err);
-                  resolve();
-                },
-              );
-            }),
-        ),
-      ).then(() => undefined);
-    });
-  return preloadOnce;
+function loadModel(id: ModelId): Promise<void> {
+  if (cache.has(id)) return Promise.resolve();
+  const pending = modelLoads.get(id);
+  if (pending) return pending;
+  const job = loaderReady.then(
+    () => new Promise<void>((resolve) => {
+      loader.load(
+        MODEL_URLS[id],
+        (gltf) => {
+          prepare(gltf.scene, id);
+          cache.set(id, gltf.scene);
+          heightCache.set(id, measureHeight(gltf.scene));
+          resolve();
+        },
+        undefined,
+        (err) => {
+          // Permit a later stage selection or retry to attempt this asset again.
+          modelLoads.delete(id);
+          console.warn('GLB load failed', id, err);
+          resolve();
+        },
+      );
+    }),
+  );
+  modelLoads.set(id, job);
+  return job;
+}
+
+export function preloadModels(ids: ModelId[] = Object.keys(MODEL_URLS) as ModelId[]): Promise<void> {
+  return Promise.all(ids.map(loadModel)).then(() => undefined);
+}
+
+export function preloadWorldModels(): Promise<void> {
+  return preloadModels(['pine_tree', 'lamp', 'slime', 'heart_crystal', 'chest']);
+}
+
+export function preloadCharacterModels(id: CharId): Promise<void> {
+  return preloadModels(CHARACTER_MODELS[id]);
+}
+
+export function preloadStageModels(id: StageId): Promise<void> {
+  return preloadModels(STAGE_MODELS[id]);
+}
+
+/** Release transient scene objects without invalidating geometry kept in the model cache. */
+export function disposeObject3D(root: THREE.Object3D): void {
+  const geometries = new Set<THREE.BufferGeometry>();
+  const materials = new Set<THREE.Material>();
+  root.traverse((node) => {
+    const renderable = node as THREE.Object3D & {
+      geometry?: THREE.BufferGeometry;
+      material?: THREE.Material | THREE.Material[];
+      userData: Record<string, unknown>;
+    };
+    if (renderable.geometry && !renderable.userData.sharedModelGeometry && !geometries.has(renderable.geometry)) {
+      geometries.add(renderable.geometry);
+      renderable.geometry.dispose();
+    }
+    const list = Array.isArray(renderable.material) ? renderable.material : renderable.material ? [renderable.material] : [];
+    for (const material of list) {
+      if (materials.has(material)) continue;
+      materials.add(material);
+      // Textures are shared by the persistent GLB/sprite caches; material.dispose()
+      // releases only the transient GPU program state and leaves those maps reusable.
+      material.dispose();
+    }
+  });
 }

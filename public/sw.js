@@ -1,4 +1,4 @@
-const CACHE = 'blade-walker-v53';
+const CACHE = 'blade-walker-v54';
 const PRECACHE = [
   './',
   './index.html',
@@ -58,7 +58,9 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() =>
-          caches.match(req).then((cached) => cached || (isDoc ? caches.match('./index.html') : cached)),
+          caches.match(req)
+            .then((cached) => cached || (isDoc ? caches.match('./index.html') : undefined))
+            .then((cached) => cached || new Response('離線且尚未快取此資源', { status: 503 })),
         ),
     );
     return;
@@ -74,7 +76,7 @@ self.addEventListener('fetch', (event) => {
           }
           return res;
         })
-        .catch(() => cached);
+        .catch(() => cached || new Response('離線且尚未快取此資源', { status: 503 }));
       return cached || fetched;
     }),
   );

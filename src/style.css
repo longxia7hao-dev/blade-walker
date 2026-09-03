@@ -52,6 +52,11 @@ button, input {
   touch-action: manipulation;
 }
 
+button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
 #game-root {
   position: fixed;
   left: 0;
@@ -310,6 +315,24 @@ button, input {
   background: linear-gradient(180deg, rgba(16, 28, 56, 0.72), rgba(10, 18, 40, 0.86));
 }
 
+#screen-pause,
+#screen-win,
+#screen-lose,
+#screen-tutorial {
+  align-items: center;
+  padding: calc(var(--safe-t) + 16px) calc(var(--safe-r) + 14px) calc(var(--safe-b) + 16px) calc(var(--safe-l) + 14px);
+}
+
+#screen-pause > .panel,
+#screen-win > .panel,
+#screen-lose > .panel,
+#screen-tutorial > .panel {
+  height: auto;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .panel-head { flex: 0 0 auto; }
 .panel-foot {
   flex: 0 0 auto;
@@ -527,7 +550,7 @@ button, input {
 /* ---- HUD ---- */
 .hud-progress {
   position: absolute;
-  top: calc(var(--safe-t) + 6px);
+  top: calc(var(--safe-t) + 18px);
   left: calc(12px + var(--safe-l));
   right: calc(12px + var(--safe-r));
 }
@@ -610,7 +633,7 @@ button, input {
 
 .hud-top {
   position: absolute;
-  top: calc(var(--safe-t) + 36px);
+  top: calc(var(--safe-t) + 52px);
   left: calc(10px + var(--safe-l));
   right: calc(10px + var(--safe-r));
   display: flex;
@@ -1199,7 +1222,7 @@ button, input {
 
 .power-hud {
   position: absolute;
-  top: calc(var(--safe-t) + 92px);
+  top: calc(var(--safe-t) + 108px);
   left: calc(12px + var(--safe-l));
   display: flex;
   gap: 6px;
@@ -1344,10 +1367,95 @@ button, input {
   pointer-events: all;
 }
 #model-loading.hidden { display: none !important; }
-#model-loading p {
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.loading-rune {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid rgba(244, 208, 106, 0.2);
+  border-top-color: #ffe08a;
+  border-right-color: #7ee0ff;
+  box-shadow: 0 0 24px rgba(126, 224, 255, 0.24);
+  animation: runeSpin 0.9s linear infinite;
+}
+@keyframes runeSpin { to { transform: rotate(360deg); } }
+.loading-content p {
   margin: 0;
   color: #ffe08a;
   letter-spacing: 0.32em;
   font-size: 18px;
   text-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+.loading-content small {
+  color: rgba(232, 215, 176, 0.72);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.runtime-issue {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--safe-t) + 18px) calc(var(--safe-r) + 18px) calc(var(--safe-b) + 18px) calc(var(--safe-l) + 18px);
+  background: rgba(7, 12, 28, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.runtime-card {
+  width: min(100%, 460px);
+  padding: 28px 20px 22px;
+  text-align: center;
+  border: 2px solid var(--gold-2);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(28, 36, 72, 0.96), rgba(14, 20, 44, 0.98));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+.runtime-card h2 {
+  margin: 0 0 12px;
+  color: #fff4d0;
+  letter-spacing: 0.12em;
+  font-size: clamp(22px, 6vw, 30px);
+}
+
+@media (max-width: 380px) {
+  .hud-top { gap: 4px; left: calc(6px + var(--safe-l)); right: calc(6px + var(--safe-r)); }
+  .party-icon { width: 42px; height: 42px; }
+  .hud-hp { gap: 5px; }
+  .hearts { gap: 3px; }
+  .heart { width: 13px; height: 13px; }
+  .score { font-size: 21px; }
+  .combo { font-size: 12px; }
+  .icon-btn { width: 44px; height: 44px; }
+  .power-hud { left: calc(7px + var(--safe-l)); gap: 4px; }
+  .power-pip { min-width: 37px; padding: 3px 6px; font-size: 10px; }
+  .ult-btn { width: 64px; height: 64px; }
+  .ult-hint { right: calc(78px + var(--safe-r)); max-width: 170px; white-space: normal; }
+}
+
+@media (orientation: portrait) and (max-height: 700px) {
+  .title-wrap { padding-top: calc(var(--safe-t) + 24px); padding-bottom: calc(var(--safe-b) + 16px); }
+  .title-hero { margin-top: 2vh; }
+  .title-thumb-zone { margin-bottom: 1vh; gap: 10px; }
+  .cta, .gem-btn { min-height: 58px; }
+  .panel-flow { padding-top: calc(var(--safe-t) + 8px); }
+  .panel-head .panel-sub { margin-bottom: 8px; }
+  .char-card.selected { aspect-ratio: 3 / 2; min-height: 170px; }
+  .tut-art { height: 112px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

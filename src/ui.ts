@@ -36,7 +36,7 @@ export class UI {
     for (const n of ['dodge-left', 'dodge-right']) {
       const edge = document.getElementById(n);
       if (!edge) continue;
-      edge.classList.remove('hidden');
+      edge.classList.toggle('hidden', !play);
       if (!play) edge.classList.remove('kick');
     }
   }
@@ -62,6 +62,8 @@ export class UI {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = `char-card ${c.palette}${selected === c.id ? ' selected' : ''}`;
+      btn.setAttribute('aria-pressed', String(selected === c.id));
+      btn.setAttribute('aria-label', `${c.name}，${c.role}。${c.desc}`);
       btn.innerHTML = `
         <div class="char-frame">
           <img class="char-art" src="${c.art}" alt="${c.name}" />
@@ -95,7 +97,9 @@ export class UI {
 
   markChar(id: CharId): void {
     this.charGrid.querySelectorAll('.char-card').forEach((n, i) => {
-      n.classList.toggle('selected', CHARACTERS[i].id === id);
+      const selected = CHARACTERS[i].id === id;
+      n.classList.toggle('selected', selected);
+      n.setAttribute('aria-pressed', String(selected));
     });
     const sel = this.charGrid.querySelector('.char-card.selected') as HTMLElement | null;
     sel?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -110,6 +114,9 @@ export class UI {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = `stage-card${selected === s.id ? ' selected' : ''}${locked ? ' locked' : ''}`;
+      btn.disabled = locked;
+      btn.setAttribute('aria-disabled', String(locked));
+      btn.setAttribute('aria-pressed', String(!locked && selected === s.id));
       btn.innerHTML = `
         <div>
           <p class="stage-title">${locked ? '未解鎖' : s.name}</p>
@@ -123,7 +130,9 @@ export class UI {
 
   markStage(id: StageId): void {
     this.stageList.querySelectorAll('.stage-card').forEach((n, i) => {
-      n.classList.toggle('selected', i === id && !n.classList.contains('locked'));
+      const selected = i === id && !n.classList.contains('locked');
+      n.classList.toggle('selected', selected);
+      n.setAttribute('aria-pressed', String(selected));
     });
   }
 
@@ -132,11 +141,17 @@ export class UI {
     const b = bgm ? '關' : '開';
     for (const id of ['btn-mute-sfx', 'btn-pause-sfx']) {
       const n = document.getElementById(id);
-      if (n) n.textContent = `音效：${s}`;
+      if (n) {
+        n.textContent = `音效：${s}`;
+        n.setAttribute('aria-pressed', String(sfx));
+      }
     }
     for (const id of ['btn-mute-bgm', 'btn-pause-bgm']) {
       const n = document.getElementById(id);
-      if (n) n.textContent = `音樂：${b}`;
+      if (n) {
+        n.textContent = `音樂：${b}`;
+        n.setAttribute('aria-pressed', String(bgm));
+      }
     }
   }
 
@@ -325,6 +340,7 @@ export class UI {
     btn.classList.toggle('ready', ready);
     btn.classList.toggle('cooling', cd > 0.02);
     btn.classList.toggle('casting', casting);
+    btn.setAttribute('aria-disabled', String(!ready));
     btn.style.setProperty('--cd', `${Math.min(1, cd / 10) * 360}deg`);
     const lab = btn.querySelector('.ult-cd');
     if (lab) lab.textContent = cd > 0.05 ? String(Math.ceil(cd)) : '';

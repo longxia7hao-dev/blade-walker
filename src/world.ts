@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { LANE_X, ROUTES, SWORD_RANGE, type RouteId, type StageDef } from './types';
-import { fitHeight, hasModel, makeInstancedMesh } from './models';
+import { disposeObject3D, fitHeight, hasModel, makeInstancedMesh } from './models';
 
 interface Prop {
   mesh: THREE.Object3D;
@@ -358,6 +358,7 @@ export class World {
           p.rotY = p.mesh.rotation.y;
           p.inst = i;
           this.group.remove(p.mesh);
+          disposeObject3D(p.mesh);
         });
         this.group.add(inst);
         this.treeInst = inst;
@@ -375,6 +376,7 @@ export class World {
           dummy.position.copy(p.mesh.position);
           if (p.light) dummy.add(p.light);
           this.group.remove(p.mesh);
+          disposeObject3D(p.mesh);
           this.group.add(dummy);
           p.mesh = dummy;
         });

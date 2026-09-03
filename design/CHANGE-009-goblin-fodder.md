@@ -2,7 +2,7 @@
 
 提出：主策劃（製作人令）
 給：主程式（等 TA 過閘再掛）
-狀態：待掛。不改 src 直到 goblin.glb 過閘。禁止第四關。不是小魔王、不是王。
+狀態：INTEGRATED（2026-09-03）。`goblin.glb` 384,212 bytes、約 7,482 triangles、1 material，通過本單雜兵預算後已接入。禁止第四關。不是小魔王、不是王。
 取代：原誤編 CHANGE-007-goblin-fodder.md（007 已是燈光、008 已是清 emissive）。
 
 ## 不改

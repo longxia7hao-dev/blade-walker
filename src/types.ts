@@ -91,7 +91,7 @@ export const CHARACTERS: CharacterDef[] = [
     hint: '滑動螢幕斬擊',
     desc: '霜刃如線。近身揮斬，圈外不中。疾斬可暴擊。',
     palette: 'frost',
-    art: './art/baishuang.png',
+    art: './art/baishuang.webp',
   },
   {
     id: 'gun',
@@ -100,7 +100,7 @@ export const CHARACTERS: CharacterDef[] = [
     hint: '點擊射擊',
     desc: '一擊一洞。瞄準頭顱可造成額外傷害。射速有限。',
     palette: 'ember',
-    art: './art/chiyan.png',
+    art: './art/chiyan.webp',
   },
   {
     id: 'mage',
@@ -109,7 +109,7 @@ export const CHARACTERS: CharacterDef[] = [
     hint: '長按蓄力，放開射擊',
     desc: '短按弱彈，蓄滿貫穿爆破。蓄力過久則法球潰散。',
     palette: 'azure',
-    art: './art/cangyan.png',
+    art: './art/cangyan.webp',
   },
 ];
 
@@ -207,6 +207,9 @@ export const HIT_HALF = 0.78;
 export const PICKUP_ALIGN = 1.12;
 export const CHARGE_LOCK_Z = -20;
 export const CHARGE_LOCK_T = 0.35;
+export const GOBLIN_SPEED = 4.2;
+export const GOBLIN_RADIUS = 0.55;
+export const GOBLIN_SHOT_COOLDOWN = 1.4;
 export const WISP_HOME_T = 0.4;
 export const PASS_Z = 5.2;
 export const ARENA_Z = -14.2;
@@ -236,6 +239,14 @@ export function easiestRoute(routes: RouteId[]): RouteId {
   let best = routes[0];
   for (const r of routes) if (ROUTES[r].threat < ROUTES[best].threat) best = r;
   return best;
+}
+
+export function goblinSpawnChance(stage: StageId, progress: number, route: RouteId): number {
+  if (route === 'easy') return 0;
+  if (stage === 0) return progress > 0.35 && (route === 'normal' || route === 'hard') ? 0.12 : 0;
+  if (stage === 1) return route === 'normal' || route === 'hard' ? 0.14 : 0;
+  if (route === 'treasure') return 0.08;
+  return route === 'normal' || route === 'hard' ? 0.16 : 0;
 }
 
 export function dirLabel(i: number, n: number): string {

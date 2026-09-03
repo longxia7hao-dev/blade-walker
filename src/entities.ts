@@ -6,6 +6,10 @@ import {
   HIT_HALF,
   CHARGE_LOCK_Z,
   CHARGE_LOCK_T,
+  GOBLIN_SPEED,
+  GOBLIN_RADIUS,
+  GOBLIN_SHOT_COOLDOWN,
+  goblinSpawnChance,
   WISP_HOME_T,
   PASS_Z,
   type Lane,
@@ -15,7 +19,7 @@ import {
   type ShotKind,
   type StageId,
 } from './types';
-import { cloneFitted, type ModelId } from './models';
+import { cloneFitted, disposeObject3D, type ModelId } from './models';
 
 export interface Monster {
   id: number;
@@ -40,6 +44,8 @@ export interface Monster {
   isMiniBoss: boolean;
   homeX: number;
   committed: boolean;
+  lockT: number;
+  shootCd: number;
   missed: boolean;
   slowT: number;
 }
@@ -78,13 +84,13 @@ let preloadOnce: Promise<void> | null = null;
 let toonRamp: THREE.DataTexture | null = null;
 
 const BOSS_SRC: Record<string, string> = {
-  bossSlime: './art/boss-slime-king.png',
-  bossWraith: './art/boss-wraith-lord-cut.png',
-  bossDemon: './art/boss-demon-lord-cut.png',
+  bossSlime: './art/boss-slime-king.webp',
+  bossWraith: './art/boss-wraith-lord-cut.webp',
+  bossDemon: './art/boss-demon-lord-cut.webp',
 };
 const PICK_SRC = {
-  heart: './art/pickup-heart-cut.png',
-  chest: './art/pickup-chest-cut.png',
+  heart: './art/pickup-heart-cut.webp',
+  chest: './art/pickup-chest-cut.webp',
 };
 
 export function preloadSprites(): Promise<void> {
@@ -291,6 +297,30 @@ function makePumpkin(mini = false): THREE.Group {
   return g;
 }
 
+function makeGoblinFallback(): THREE.Group {
+  const g = new THREE.Group();
+  const skin = toon(0x6d9b4c);
+  const leather = new THREE.MeshStandardMaterial({ color: 0x5a3828, roughness: 0.82 });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.48, 4, 7), leather);
+  body.position.y = 0.58;
+  body.castShadow = true;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 8, 6), skin);
+  head.position.y = 1.03;
+  head.castShadow = true;
+  for (const side of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.34, 5), skin);
+    ear.position.set(side * 0.3, 1.06, 0);
+    ear.rotation.z = side * -Math.PI / 2;
+    g.add(ear);
+  }
+  const bow = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.025, 5, 12, Math.PI), gold());
+  bow.position.set(0, 0.68, 0.25);
+  bow.rotation.z = Math.PI / 2;
+  g.add(body, head, bow, blob(0.35));
+  g.userData.body = head;
+  return g;
+}
+
 function makeBillboard(url: string, h: number): THREE.Group {
   const g = new THREE.Group();
   const tex = getTex(url);
@@ -368,6 +398,7 @@ const MINION_GLB: Partial<Record<MonsterKind, { id: ModelId; height: number; fal
   beetle: { id: 'beetle', height: 0.8, fallback: () => makeBeetle() },
   pumpkin: { id: 'pumpkin', height: 0.9, fallback: () => makePumpkin(false) },
   pumpkinMini: { id: 'pumpkin', height: 0.5, fallback: () => makePumpkin(true) },
+  goblin: { id: 'goblin', height: 1.25, fallback: () => makeGoblinFallback() },
   miniBeetle: { id: 'beetle', height: 1.38, fallback: () => makeEliteBeetle() },
 };
 
@@ -427,7 +458,7 @@ export function createMonsterMesh(kind: MonsterKind): THREE.Group {
   if (kind === 'miniDemon') {
     const packed = cloneFitted('demon_lieutenant', 2.0);
     if (packed) return wrapGlb(packed.model, packed.scale, 0.9, true);
-    return makeBillboard('./art/mini-demon-lieutenant.png', 2.0);
+    return makeBillboard('./art/mini-demon-lieutenant.webp', 2.0);
   }
   const minion = MINION_GLB[kind];
   if (minion) {
@@ -454,6 +485,7 @@ export function upgradeMonsterMesh(m: Monster): boolean {
     parent.add(next);
     parent.remove(m.mesh);
   }
+  disposeObject3D(m.mesh);
   next.position.copy(m.pos);
   m.mesh = next;
   return true;
@@ -469,6 +501,7 @@ export function spawnMonster(kind: MonsterKind, lane?: number, playerX = 0, spre
     kind === 'beetle' ? 2 + (Math.random() < 0.4 ? 1 : 0) :
     kind === 'pumpkin' ? 1 :
     kind === 'pumpkinMini' ? 1 :
+    kind === 'goblin' ? 1 :
     kind === 'miniSlime' ? 4 :
     kind === 'miniWraith' ? 4 :
     kind === 'miniBeetle' ? 5 :
@@ -485,6 +518,7 @@ export function spawnMonster(kind: MonsterKind, lane?: number, playerX = 0, spre
     kind === 'miniBeetle' ? 1.02 :
     kind === 'miniDemon' ? 1.12 :
     kind === 'pumpkinMini' ? 0.38 :
+    kind === 'goblin' ? GOBLIN_RADIUS :
     kind === 'beetle' ? 0.7 :
     0.62;
   const ln = lane ?? 0;
@@ -517,6 +551,8 @@ export function spawnMonster(kind: MonsterKind, lane?: number, playerX = 0, spre
     chargeDmg: 0,
     homeX,
     committed: false,
+    lockT: 0,
+    shootCd: GOBLIN_SHOT_COOLDOWN,
     missed: false,
     slowT: 0,
   };
@@ -611,12 +647,15 @@ export function updateMonster(m: Monster, dt: number, hold = false, playerX = 0)
   if (m.kind === 'beetle') speed = 4.8;
   if (m.kind === 'pumpkin') speed = 5.0;
   if (m.kind === 'pumpkinMini') speed = 6.2;
+  if (m.kind === 'goblin') speed = GOBLIN_SPEED;
   if (m.stunned > 0) speed *= 0.15;
   if (m.slowT > 0) speed *= 0.28;
 
   if (!m.committed) {
-    if (m.pos.z >= CHARGE_LOCK_Z || m.t >= CHARGE_LOCK_T) {
-      m.committed = true;
+    if (m.pos.z >= CHARGE_LOCK_Z) {
+      m.lockT += dt;
+      m.homeX = THREE.MathUtils.damp(m.homeX, playerX, 4.5, dt);
+      if (m.lockT >= CHARGE_LOCK_T) m.committed = true;
     } else {
       m.homeX = THREE.MathUtils.damp(m.homeX, playerX, 0.55, dt);
     }
@@ -678,7 +717,11 @@ export function updateMonster(m: Monster, dt: number, hold = false, playerX = 0)
 }
 
 export function pickSpawn(stage: StageId, progress: number, route: RouteId): MonsterKind {
-  const r = Math.random();
+  const roll = Math.random();
+  const goblinChance = goblinSpawnChance(stage, progress, route);
+  if (roll < goblinChance) return 'goblin';
+  // Re-normalize the remainder so the existing enemy mix keeps its proportions.
+  const r = goblinChance < 1 ? (roll - goblinChance) / (1 - goblinChance) : 0;
   if (route === 'easy') {
     if (r < 0.82) return 'slime';
     if (r < 0.94) return 'pumpkin';

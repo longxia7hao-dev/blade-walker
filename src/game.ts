@@ -31,6 +31,7 @@ import {
   ULT_GUN,
   ULT_MAGE,
   FREEZE_DUR,
+  GOBLIN_SHOT_COOLDOWN,
   PICKUP_HINT,
   easiestRoute,
   dirLabel,
@@ -57,7 +58,6 @@ import {
   updateMonster,
   pickSpawn,
   bossKind,
-  preloadSprites,
   spawnPickup,
   updatePickup,
   spawnShot,
@@ -67,8 +67,14 @@ import {
   type Shot,
 } from './entities';
 import { loadSave, writeSave, scoreKey, type SaveData } from './save';
-import { preloadModels } from './models';
+import {
+  disposeObject3D,
+  preloadCharacterModels,
+  preloadStageModels,
+  preloadWorldModels,
+} from './models';
 import { isPhone, pinRoot, bindViewport, unlockAudioOnGesture } from './mobile';
+import { hideRuntimeIssue, showRuntimeIssue } from './runtime-ui';
 
 interface SlashPt { x: number; y: number; life: number }
 interface Tracer { x0: number; y0: number; x1: number; y1: number; life: number }
@@ -199,6 +205,8 @@ export class Game {
   private ultHit = new Set<number>();
   private capsuleBoost = 0;
   private pickupHintOn = false;
+  private contextLost = false;
+  private runtimeErrors = 0;
 
   constructor() {
     this.save = loadSave();
@@ -231,13 +239,28 @@ export class Game {
     if ('physicallyCorrectLights' in r) r.physicallyCorrectLights = true;
     this.renderer.shadowMap.enabled = !phone;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); });
-    canvas.addEventListener('webglcontextrestored', () => { this.mountScene(); });
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      this.contextLost = true;
+      if (this.screen === 'play') this.pause(true);
+      showRuntimeIssue('3D 畫面暫時中斷', '遊戲已自動暫停，系統正在嘗試恢復；若畫面沒有恢復，請重新載入。');
+    });
+    canvas.addEventListener('webglcontextrestored', () => {
+      try {
+        this.contextLost = false;
+        this.mountScene();
+        hideRuntimeIssue();
+      } catch (error) {
+        console.error('WebGL restore failed', error);
+        showRuntimeIssue('3D 畫面恢復失敗', '本局進度已暫停，請重新載入後再試。');
+      }
+    });
     this.camera = new THREE.PerspectiveCamera(this.baseFov, 1, 0.08, 90);
     this.camera.position.set(0, 1.48, 0.35);
     this.scene.add(this.camera);
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
     this.scene.environmentIntensity = 0.65;
     const viewFill = new THREE.HemisphereLight(0xfff2d8, 0x223318, 0.35);
     this.camera.add(viewFill);
@@ -252,6 +275,12 @@ export class Game {
     this.resize();
     bindViewport(() => this.resize());
     unlockAudioOnGesture(() => this.audio.unlock());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && this.screen === 'play') this.pause(true);
+    });
+    window.addEventListener('pagehide', () => {
+      if (this.screen === 'play') this.pause(true);
+    });
     this.ui.setMuteLabels(this.save.muteSfx, this.save.muteBgm);
     this.ui.show('title');
     this.audio.setMode('title');
@@ -260,18 +289,28 @@ export class Game {
 
   private bootAssets(): void {
     const el = document.getElementById('model-loading');
-    void Promise.all([preloadSprites(), preloadModels()])
-      .catch(() => undefined)
-      .then(() => {
-        this.view.attachLoaded();
-        this.world.attachLoaded();
-        el?.classList.add('hidden');
-        this.upgradeLiveMeshes();
-        if (this.seekAt() > 0 && this.screen !== 'play') {
-          this.applyQaSeekStage();
-          this.beginFight();
-        }
-      });
+    // Procedural meshes make the title and combat immediately usable. Heavy
+    // GLBs stream in behind the title instead of blocking the whole UI.
+    requestAnimationFrame(() => {
+      el?.classList.add('hidden');
+      if (this.seekAt() > 0 && this.screen !== 'play') {
+        this.applyQaSeekStage();
+        this.beginFight();
+      }
+    });
+    void preloadWorldModels().then(() => this.attachLoadedAssets());
+    window.setTimeout(() => this.warmAssets(), 300);
+  }
+
+  private warmAssets(char = this.selectedChar ?? this.char, stage = this.selectedStage ?? this.stage): void {
+    void preloadCharacterModels(char).then(() => this.attachLoadedAssets());
+    void preloadStageModels(stage).then(() => this.attachLoadedAssets());
+  }
+
+  private attachLoadedAssets(): void {
+    this.view.attachLoaded();
+    this.world.attachLoaded();
+    this.upgradeLiveMeshes();
   }
 
   private applyQaSeekStage(): void {
@@ -361,6 +400,7 @@ export class Game {
       this.selectedChar = id;
       this.char = id;
       this.view.show(id);
+      this.warmAssets(id, this.selectedStage ?? this.stage);
       this.ui.markChar(id);
       (document.getElementById('btn-depart') as HTMLButtonElement).disabled = false;
     });
@@ -374,11 +414,13 @@ export class Game {
     this.audio.setTheme(this.char, 'full');
     this.ui.show('stage');
     this.selectedStage = this.selectedStage ?? (Math.min(this.save.unlockedStage, 2) as StageId);
+    this.warmAssets(this.char, this.selectedStage);
     this.ui.buildStages(this.save, this.char, this.selectedStage, (id, locked) => {
       this.audio.unlock();
       this.audio.ui();
       if (locked) return;
       this.selectedStage = id;
+      this.warmAssets(this.char, id);
       this.ui.markStage(id);
       (document.getElementById('btn-enter-stage') as HTMLButtonElement).disabled = false;
     });
@@ -408,6 +450,7 @@ export class Game {
 
   private beginFight(): void {
     this.applyQaSeekStage();
+    this.warmAssets(this.char, this.stage);
     this.save.seenTutorial[this.char] = true;
     writeSave(this.save);
     this.clearCombat();
@@ -523,10 +566,10 @@ export class Game {
   }
 
   private clearCombat(): void {
-    for (const m of this.monsters) this.scene.remove(m.mesh);
-    for (const p of this.pickups) this.scene.remove(p.mesh);
-    for (const s of this.shots) this.scene.remove(s.mesh);
-    for (const w of this.waves) this.scene.remove(w.mesh);
+    for (const m of this.monsters) this.removeObject(m.mesh);
+    for (const p of this.pickups) this.removeObject(p.mesh);
+    for (const s of this.shots) this.removeObject(s.mesh);
+    for (const w of this.waves) this.removeObject(w.mesh);
     this.monsters = [];
     this.pickups = [];
     this.shots = [];
@@ -535,8 +578,6 @@ export class Game {
     this.sparks = [];
     this.slash = [];
     this.tracers = [];
-    for (const w of this.waves) this.scene.remove(w.mesh);
-    this.waves = [];
     this.slashHit.clear();
     this.shotHit.clear();
     this.pickHit.clear();
@@ -556,6 +597,11 @@ export class Game {
     this.frostFx.visible = false;
     this.novaMesh.visible = false;
     this.barrier.visible = false;
+  }
+
+  private removeObject(object: THREE.Object3D): void {
+    this.scene.remove(object);
+    disposeObject3D(object);
   }
 
   private resize(): void {
@@ -635,6 +681,10 @@ export class Game {
 
   private loop = (): void => {
     requestAnimationFrame(this.loop);
+    if (this.contextLost) {
+      this.input.endFrame();
+      return;
+    }
     if (this.remountNext) {
       this.remountNext = false;
       try { this.mountScene(); } catch { /* ignore */ }
@@ -761,13 +811,19 @@ export class Game {
     this.drawFx(visDt);
     this.renderer.setClearColor(this.world.fogColor, 1);
     this.renderer.render(this.scene, this.camera);
+    this.runtimeErrors = 0;
     } catch (err) {
       console.error(err);
+      this.runtimeErrors += 1;
       try {
         const gl = this.renderer.getContext();
         if (!gl || gl.isContextLost()) this.remountNext = true;
       } catch {
         this.remountNext = true;
+      }
+      if (this.runtimeErrors >= 3) {
+        if (this.screen === 'play') this.pause(true);
+        showRuntimeIssue('遊戲執行發生異常', '遊戲已自動暫停。請重新載入後再試，既有最佳紀錄不會受到影響。');
       }
     } finally {
       try { this.input.endFrame(); } catch { /* ignore */ }
@@ -805,6 +861,25 @@ export class Game {
       if (s.allLanes || overlapsLane(s.pos.x, s.radius, 1)) nearR = true;
     }
     this.ui.setDodgePulse(nearL && this.lane !== -1, nearR && this.lane !== 1);
+  }
+
+  private updateGoblin(m: Monster, dt: number): void {
+    if (!m.committed || m.missed || m.stunned > 0 || m.pos.z >= HIT_Z - 1.2) return;
+    m.shootCd -= dt;
+    if (m.shootCd > 0) return;
+    m.shootCd += GOBLIN_SHOT_COOLDOWN;
+    const pos = m.pos.clone().setY(1.05);
+    const vz = 9.2;
+    const travel = Math.max(0.2, (HIT_Z - pos.z) / vz);
+    const shot = spawnShot('shard', pos, {
+      vel: new THREE.Vector3((this.camX - pos.x) / travel, 0, vz),
+      allLanes: false,
+      homing: false,
+    });
+    this.scene.add(shot.mesh);
+    this.shots.push(shot);
+    this.burst(pos, 0xffd06a, 6);
+    this.audio.warn();
   }
 
   private handleForkInput(): void {
@@ -903,14 +978,15 @@ export class Game {
     for (let i = this.monsters.length - 1; i >= 0; i--) {
       const m = this.monsters[i];
       if (!m.alive) {
-        this.scene.remove(m.mesh);
+        this.removeObject(m.mesh);
         this.monsters.splice(i, 1);
         continue;
       }
       if (m.isBoss && m.slowT <= 0) this.updateBoss(m, dt);
       const ev = updateMonster(m, dt, false, px);
+      if (!ev && m.kind === 'goblin') this.updateGoblin(m, dt);
       if (ev === 'passed') {
-        this.scene.remove(m.mesh);
+        this.removeObject(m.mesh);
         this.monsters.splice(i, 1);
         continue;
       }
@@ -1465,7 +1541,7 @@ export class Game {
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const s = this.shots[i];
       if (!s.alive) {
-        this.scene.remove(s.mesh);
+        this.removeObject(s.mesh);
         this.shots.splice(i, 1);
         continue;
       }
@@ -1474,7 +1550,7 @@ export class Game {
         const hits = s.allLanes || overlapsPlayer(s.pos.x, s.radius, px);
         if (hits && this.canBeHit()) this.playerHurt(1);
         s.alive = false;
-        this.scene.remove(s.mesh);
+        this.removeObject(s.mesh);
         this.shots.splice(i, 1);
       }
     }
@@ -1492,7 +1568,7 @@ export class Game {
     for (let i = this.pickups.length - 1; i >= 0; i--) {
       const p = this.pickups[i];
       if (!p.alive) {
-        this.scene.remove(p.mesh);
+        this.removeObject(p.mesh);
         this.pickups.splice(i, 1);
         continue;
       }
@@ -1512,13 +1588,13 @@ export class Game {
       }
       if (close && p.pos.z >= HIT_Z - 0.4) {
         this.collectPickup(p);
-        this.scene.remove(p.mesh);
+        this.removeObject(p.mesh);
         this.pickups.splice(i, 1);
         continue;
       }
       if (p.pos.z > PASS_Z) {
         p.alive = false;
-        this.scene.remove(p.mesh);
+        this.removeObject(p.mesh);
         this.pickups.splice(i, 1);
       }
     }
@@ -1539,7 +1615,6 @@ export class Game {
     this.ui.float('生命+1', scr ? scr.x / this.vw : 0.5, scr ? scr.y / this.vh : 0.5, 'heal');
     this.burst(p.pos, 0xff6a8a, 18);
     this.burst(new THREE.Vector3(this.camX, 1.1, -1.4), 0xffc0d4, 10);
-    this.scene.remove(p.mesh);
   }
 
   private openChest(p: Pickup): void {
@@ -1551,7 +1626,6 @@ export class Game {
     this.ui.float(`寶箱 +${pts}`, scr ? scr.x / this.vw : 0.5, scr ? scr.y / this.vh : 0.5, 'gold');
     this.burst(p.pos, 0xf4d06a, 26);
     this.burst(new THREE.Vector3(this.camX, 1.1, -1.4), 0xffe9a0, 12);
-    this.scene.remove(p.mesh);
   }
 
   private canBeHit(): boolean {
@@ -2034,7 +2108,6 @@ export class Game {
     this.burst(new THREE.Vector3(this.camX, 1.15, -1.5), this.pickupColor(p.kind), 12);
     if (leveled) this.ui.levelFlash();
     this.ui.setPowers(this.atkLv, this.shieldN, this.spdLv);
-    this.scene.remove(p.mesh);
   }
 
   private tryUlt(): void {
@@ -2206,7 +2279,7 @@ export class Game {
         }
       }
       if (w.life <= 0 || w.pos.z < -48) {
-        this.scene.remove(w.mesh);
+        this.removeObject(w.mesh);
         this.waves.splice(i, 1);
       }
     }

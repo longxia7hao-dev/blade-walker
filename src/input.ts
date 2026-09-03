@@ -95,10 +95,10 @@ export class Input {
       if (rec?.dodge) return;
       this.updatePos(e, false);
     });
-    const up = (e: PointerEvent) => {
+    const finish = (e: PointerEvent, cancelled: boolean) => {
       const rec = this.pointers.get(e.pointerId);
       this.pointers.delete(e.pointerId);
-      if (rec && rec.dodge && !this.twoFingerUsed) {
+      if (!cancelled && rec && rec.dodge && !this.twoFingerUsed) {
         rec.x = e.clientX;
         rec.y = e.clientY;
         this.checkDodgeFlick(rec, true);
@@ -106,14 +106,18 @@ export class Input {
       if (this.pointers.size < 2) this.twoFingerUsed = false;
       if (this.pointerId !== null && e.pointerId !== this.pointerId) return;
       e.preventDefault();
-      this.updatePos(e, false);
-      if (this.down && this.attackActive) this.released = true;
+      if (!cancelled) {
+        this.updatePos(e, false);
+        if (this.down && this.attackActive) this.released = true;
+      }
       this.down = false;
       this.attackActive = false;
       this.pointerId = null;
     };
-    bind('pointerup', up);
-    bind('pointercancel', up);
+    bind('pointerup', (e) => finish(e, false));
+    // OS gestures, app switching and notification shade interactions cancel
+    // pointers. They must not be interpreted as a mage cast or sword release.
+    bind('pointercancel', (e) => finish(e, true));
     window.addEventListener('keydown', (e) => {
       if (['Space', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) || e.code === 'Space') {
         e.preventDefault();
