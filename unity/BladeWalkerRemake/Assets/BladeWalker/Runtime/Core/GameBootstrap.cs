@@ -51,7 +51,7 @@ namespace BladeWalker.Remake
             runner.Initialize(network, input);
             hero.AddComponent<BaishuangProxyAnimator>().Initialize(runner);
             HeroCombat combat = hero.AddComponent<HeroCombat>();
-            combat.Initialize(input, weaponSocket);
+            combat.Initialize(weaponSocket);
 
             GameObject cameraObject = new GameObject("HeroCamera");
             cameraObject.tag = "MainCamera";
@@ -59,14 +59,23 @@ namespace BladeWalker.Remake
             FollowCameraRig cameraRig = cameraObject.AddComponent<FollowCameraRig>();
             cameraRig.Initialize(runner);
             cameraObject.AddComponent<AudioListener>();
+            combat.BindCamera(cameraRig.Camera);
+            combat.ComboChanged += (combo, critical) =>
+            {
+                if (combo > 0) cameraRig.Punch(critical ? 1f : 0.52f);
+            };
             QualityDirector.Configure(cameraRig.Camera, transform);
             ConfigureSkybox();
 
             EncounterDirector encounters = systems.AddComponent<EncounterDirector>();
             encounters.Initialize(runner, vitals);
 
+            SwipeBladeController swipeBlade = systems.AddComponent<SwipeBladeController>();
+            swipeBlade.Initialize(cameraRig.Camera, combat, runner);
+            systems.AddComponent<SliceAudioFeedback>().Initialize(combat);
+
             MobileHud hud = systems.AddComponent<MobileHud>();
-            hud.Initialize(runner, vitals, combat, encounters, input);
+            hud.Initialize(runner, vitals, combat, encounters);
 
             systems.AddComponent<StormPulse>();
         }

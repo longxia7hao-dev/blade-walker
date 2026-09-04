@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using BladeWalker.Remake.Presentation;
 using UnityEngine;
 
 namespace BladeWalker.Remake.Combat
@@ -19,6 +21,8 @@ namespace BladeWalker.Remake.Combat
     /// </summary>
     public sealed class EnemyMotor : MonoBehaviour
     {
+        private static readonly List<EnemyMotor> ActiveEnemies = new List<EnemyMotor>();
+
         public event Action<EnemyMotor> Defeated;
 
         private Transform _hero;
@@ -44,9 +48,22 @@ namespace BladeWalker.Remake.Combat
         private Transform _crystalRight;
 
         public EnemyLocomotion Locomotion => _locomotion;
+        public static IReadOnlyList<EnemyMotor> Active => ActiveEnemies;
         public bool IsBoss => _locomotion == EnemyLocomotion.SlimeKing;
         public bool IsAlive => !_dead;
         public float HealthRatio => _maxHealth <= 0f ? 0f : Mathf.Clamp01(_health / _maxHealth);
+        public Vector3 SliceTargetWorld => transform.position + Vector3.up * (IsBoss ? 2.15f : 0.82f);
+        public float SliceRadiusWorld => IsBoss ? 2.65f : (_locomotion == EnemyLocomotion.Flyer ? 1.15f : 0.9f);
+
+        private void OnEnable()
+        {
+            if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            ActiveEnemies.Remove(this);
+        }
 
         public void Initialize(
             EnemyLocomotion locomotion,
@@ -291,6 +308,7 @@ namespace BladeWalker.Remake.Combat
         private void Die()
         {
             _dead = true;
+            CombatVfx.SpawnDefeatBurst(SliceTargetWorld, IsBoss ? 2.1f : 0.85f, IsBoss);
             Defeated?.Invoke(this);
             StartCoroutine(DeathRoutine());
         }

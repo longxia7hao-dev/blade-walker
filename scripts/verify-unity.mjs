@@ -53,6 +53,11 @@ const routeSource = await readFile(path.join(runtimeRoot, 'World', 'RouteSpline.
 const motorSource = await readFile(path.join(runtimeRoot, 'World', 'PlayerRouteMotor.cs'), 'utf8');
 const encounterSource = await readFile(path.join(runtimeRoot, 'Combat', 'EncounterDirector.cs'), 'utf8');
 const enemySource = await readFile(path.join(runtimeRoot, 'Combat', 'EnemyMotor.cs'), 'utf8');
+const combatSource = await readFile(path.join(runtimeRoot, 'Combat', 'HeroCombat.cs'), 'utf8');
+const swipeSource = await readFile(path.join(runtimeRoot, 'Combat', 'SwipeBladeController.cs'), 'utf8');
+const inputSource = await readFile(path.join(runtimeRoot, 'Core', 'MobileInput.cs'), 'utf8');
+const trailSource = await readFile(path.join(runtimeRoot, 'Presentation', 'SwipeTrailRenderer.cs'), 'utf8');
+const vfxSource = await readFile(path.join(runtimeRoot, 'Presentation', 'CombatVfx.cs'), 'utf8');
 const qualitySource = await readFile(path.join(runtimeRoot, 'Presentation', 'QualityDirector.cs'), 'utf8');
 const packageManifest = JSON.parse(await readFile(path.join(unityRoot, 'Packages', 'manifest.json'), 'utf8'));
 
@@ -89,6 +94,15 @@ ok(enemySource.includes('Vector3.up * (4.4f - dive'), 'Flyer must occupy and cha
 ok(encounterSource.includes('Aerial wing') && encounterSource.includes('Pincer'), 'Encounter director must mix aerial and flanking formations');
 ok((encounterSource.match(/SpawnAhead\(/g) ?? []).length >= 12, 'Encounter formations need staggered multi-position spawns');
 
+ok(combatSource.includes('WorldToScreenPoint') && combatSource.includes('DistanceToSegment'), 'Swipe combat must intersect the visible monster in screen space');
+ok(combatSource.includes('HashSet<EnemyMotor>') && combatSource.includes('EnemyMotor.Active'), 'One gesture must support allocation-free multi-monster slicing without duplicate hits');
+ok(combatSource.includes('criticalSwipeSpeed') && combatSource.includes('ComboChanged'), 'Swipe speed, critical cuts, and combo feedback must be implemented');
+ok(combatSource.includes('SwipeCommitted') && allSource.includes('GeneratedFrostWhoosh'), 'Swipe and hit audio feedback must follow gesture speed and combo');
+ok(swipeSource.includes('BeginSwipe') && swipeSource.includes('SliceSegment') && swipeSource.includes('EndSwipe'), 'Touch gestures must drive a complete blade stroke lifecycle');
+ok(inputSource.includes('MovementZoneHeight = 0.24f') && swipeSource.includes('IsBladeZone'), 'Movement and blade gestures must use separate lower/upper screen zones');
+ok(trailSource.includes('LineRenderer') && trailSource.includes('ScreenToWorldPoint'), 'The blade trail must follow the finger in real time');
+ok(vfxSource.includes('SpawnSliceImpact') && vfxSource.includes('SpawnDefeatBurst'), 'Slice impacts and defeat shatter feedback are required');
+
 ok(packageManifest.dependencies['com.unity.render-pipelines.universal']?.startsWith('17.'), 'Unity 6 project must use URP 17');
 ok(qualitySource.includes('Bloom') && qualitySource.includes('TonemappingMode.ACES'), 'URP presentation must include bloom and ACES tonemapping');
 ok(allSource.includes('Boss_CrystalSlimeKing'), 'Vertical slice must include the Crystal Slime King arena');
@@ -100,5 +114,5 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log(`Unity remake verification passed: ${csFiles.length} runtime scripts, continuous route, true branches, 6 locomotion modes, URP post FX.`);
+  console.log(`Unity remake verification passed: ${csFiles.length} runtime scripts, screen-space multi-slice combat, continuous route, true branches, 6 locomotion modes, URP post FX.`);
 }

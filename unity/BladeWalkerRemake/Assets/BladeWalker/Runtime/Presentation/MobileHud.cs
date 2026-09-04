@@ -10,12 +10,11 @@ namespace BladeWalker.Remake.Presentation
         private HeroVitals _vitals;
         private HeroCombat _combat;
         private EncounterDirector _encounters;
-        private MobileInput _input;
         private GUIStyle _panel;
         private GUIStyle _title;
         private GUIStyle _small;
         private GUIStyle _button;
-        private GUIStyle _attack;
+        private GUIStyle _comboStyle;
         private bool _victory;
         private bool _defeat;
 
@@ -23,14 +22,12 @@ namespace BladeWalker.Remake.Presentation
             PlayerRouteMotor runner,
             HeroVitals vitals,
             HeroCombat combat,
-            EncounterDirector encounters,
-            MobileInput input)
+            EncounterDirector encounters)
         {
             _runner = runner;
             _vitals = vitals;
             _combat = combat;
             _encounters = encounters;
-            _input = input;
             encounters.BossDefeated += HandleVictory;
             vitals.Defeated += HandleDefeat;
         }
@@ -51,6 +48,7 @@ namespace BladeWalker.Remake.Presentation
             GUI.matrix = Matrix4x4.TRS(new Vector3(offsetX, offsetY, 0f), Quaternion.identity, Vector3.one * scale);
 
             DrawTopStatus();
+            DrawComboFeedback();
             DrawBranchDecision();
             DrawControls();
             DrawEndState();
@@ -92,15 +90,24 @@ namespace BladeWalker.Remake.Presentation
 
         private void DrawControls()
         {
-            GUI.Box(new Rect(42f, 1688f, 620f, 166f), GUIContent.none, _panel);
-            GUI.Label(new Rect(76f, 1714f, 540f, 38f), "拖曳：自由側移", _title);
-            GUI.Label(new Rect(76f, 1763f, 540f, 30f), "A / D 亦可移動 · SPACE 斬擊", _small);
-            GUI.Label(new Rect(76f, 1803f, 540f, 30f), "空中、跳躍怪物都可被霜刃命中", _small);
+            GUI.Box(new Rect(42f, 1662f, 996f, 192f), GUIContent.none, _panel);
+            GUI.Label(new Rect(76f, 1681f, 928f, 38f), "↑ 上方 76%：手指劃過怪物斬擊", _title);
+            GUI.Label(new Rect(76f, 1732f, 928f, 30f), "一筆可連斬多隻 · 快速揮斬觸發暴擊", _small);
+            GUI.Label(new Rect(76f, 1772f, 928f, 30f), "↔ 下方 24%：自由左右移動（可雙指同時操作）", _small);
+            GUI.Label(new Rect(76f, 1811f, 928f, 26f), "電腦：拖曳滑斬 · A/D 移動 · SPACE 疾斬", _small);
+        }
 
-            GUI.enabled = _combat.CooldownRatio <= 0.01f && !_defeat && !_victory;
-            if (GUI.Button(new Rect(786f, 1648f, 224f, 224f), "斬", _attack))
-                _input.QueueAttack();
-            GUI.enabled = true;
+        private void DrawComboFeedback()
+        {
+            int combo = _combat.Combo;
+            if (combo <= 0) return;
+            Color previous = _comboStyle.normal.textColor;
+            _comboStyle.normal.textColor = _combat.LastSliceWasCritical
+                ? new Color(1f, 0.76f, 0.2f)
+                : new Color(0.3f, 0.94f, 1f);
+            string label = _combat.LastSliceWasCritical ? $"疾斬 ×{combo}" : $"COMBO ×{combo}";
+            GUI.Label(new Rect(642f, 294f, 370f, 88f), label, _comboStyle);
+            _comboStyle.normal.textColor = previous;
         }
 
         private void DrawEndState()
@@ -154,10 +161,11 @@ namespace BladeWalker.Remake.Presentation
                 hover = { background = attackTexture, textColor = Color.white },
                 active = { background = attackTexture, textColor = Color.white },
             };
-            _attack = new GUIStyle(_button)
+            _comboStyle = new GUIStyle(_title)
             {
-                fontSize = 58,
-                normal = { background = attackTexture, textColor = Color.white },
+                fontSize = 48,
+                alignment = TextAnchor.MiddleRight,
+                normal = { textColor = new Color(0.3f, 0.94f, 1f) },
             };
         }
 

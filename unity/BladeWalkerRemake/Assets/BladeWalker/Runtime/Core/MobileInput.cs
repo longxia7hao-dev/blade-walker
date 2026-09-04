@@ -9,8 +9,9 @@ namespace BladeWalker.Remake
     public sealed class MobileInput
     {
         private Vector2 _mousePrevious;
-        private bool _mouseTracked;
-        private bool _attackQueued;
+        private bool _mouseSteerTracked;
+
+        public const float MovementZoneHeight = 0.24f;
 
         public float ReadSteer()
         {
@@ -19,20 +20,24 @@ namespace BladeWalker.Remake
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) keyboard += 1f;
             if (Mathf.Abs(keyboard) > 0.01f) return keyboard;
 
-            if (Input.touchCount > 0)
+            for (int i = 0; i < Input.touchCount; i++)
             {
-                Touch touch = Input.GetTouch(0);
-                if (touch.phase == TouchPhase.Moved)
+                Touch touch = Input.GetTouch(i);
+                if (touch.position.y <= Screen.height * MovementZoneHeight
+                    && touch.phase == TouchPhase.Moved)
+                {
                     return Mathf.Clamp(touch.deltaPosition.x / Mathf.Max(12f, Screen.width * 0.028f), -1f, 1f);
+                }
             }
 
-            if (Input.GetMouseButtonDown(0))
+            if (Input.touchCount == 0 && Input.GetMouseButtonDown(0)
+                && Input.mousePosition.y <= Screen.height * MovementZoneHeight)
             {
                 _mousePrevious = Input.mousePosition;
-                _mouseTracked = true;
+                _mouseSteerTracked = true;
             }
 
-            if (Input.GetMouseButton(0) && _mouseTracked)
+            if (Input.touchCount == 0 && Input.GetMouseButton(0) && _mouseSteerTracked)
             {
                 Vector2 current = Input.mousePosition;
                 float delta = current.x - _mousePrevious.x;
@@ -40,34 +45,8 @@ namespace BladeWalker.Remake
                 return Mathf.Clamp(delta / Mathf.Max(10f, Screen.width * 0.018f), -1f, 1f);
             }
 
-            if (Input.GetMouseButtonUp(0)) _mouseTracked = false;
+            if (Input.GetMouseButtonUp(0)) _mouseSteerTracked = false;
             return 0f;
-        }
-
-        public bool ConsumeAttack()
-        {
-            bool keyboard = Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.J);
-            bool touchTap = false;
-            for (int i = 0; i < Input.touchCount; i++)
-            {
-                Touch touch = Input.GetTouch(i);
-                if (touch.phase == TouchPhase.Ended
-                    && touch.deltaPosition.sqrMagnitude < 36f
-                    && touch.position.y > Screen.height * 0.24f)
-                {
-                    touchTap = true;
-                    break;
-                }
-            }
-
-            bool queued = _attackQueued;
-            _attackQueued = false;
-            return keyboard || touchTap || queued;
-        }
-
-        public void QueueAttack()
-        {
-            _attackQueued = true;
         }
     }
 }
