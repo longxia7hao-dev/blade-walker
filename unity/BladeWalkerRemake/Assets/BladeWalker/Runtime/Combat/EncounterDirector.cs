@@ -27,7 +27,7 @@ namespace BladeWalker.Remake.Combat
             _runner = runner;
             _hero = runner.transform;
             _heroVitals = heroVitals;
-            _spawnAt = Time.time + 1.8f;
+            _spawnAt = Time.time + 3.2f;
             runner.ArenaReached += BeginBossArena;
         }
 

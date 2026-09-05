@@ -33,9 +33,7 @@ namespace BladeWalker.Remake.Presentation
             _line.shadowCastingMode = ShadowCastingMode.Off;
             _line.receiveShadows = false;
 
-            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-            if (shader == null) shader = Shader.Find("Sprites/Default");
-            _material = new Material(shader) { name = "SwipeTrailMaterial" };
+            _material = MaterialFactory.CreateParticle("SwipeTrailMaterial");
             if (_material.HasProperty("_Surface")) _material.SetFloat("_Surface", 1f);
             if (_material.HasProperty("_ZWrite")) _material.SetFloat("_ZWrite", 0f);
             if (_material.HasProperty("_SrcBlend")) _material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);

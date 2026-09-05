@@ -35,7 +35,9 @@ namespace BladeWalker.Remake
 
         private void BuildVerticalSlice()
         {
+#if !UNITY_WEBGL || UNITY_EDITOR
             Screen.orientation = ScreenOrientation.Portrait;
+#endif
             RouteNetwork network = RouteNetwork.CreateStormShrine();
             MobileInput input = new MobileInput();
 
@@ -82,9 +84,7 @@ namespace BladeWalker.Remake
 
         private static void ConfigureSkybox()
         {
-            Shader shader = Shader.Find("Skybox/Procedural");
-            if (shader == null) return;
-            Material sky = new Material(shader) { name = "StormSkyRuntime" };
+            Material sky = MaterialFactory.CreateSkybox("StormSkyRuntime");
             if (sky.HasProperty("_SkyTint")) sky.SetColor("_SkyTint", new Color(0.035f, 0.11f, 0.18f));
             if (sky.HasProperty("_GroundColor")) sky.SetColor("_GroundColor", new Color(0.008f, 0.018f, 0.025f));
             if (sky.HasProperty("_AtmosphereThickness")) sky.SetFloat("_AtmosphereThickness", 0.42f);

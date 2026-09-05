@@ -8,8 +8,8 @@ namespace BladeWalker.Remake.Combat
         public event Action<int, int> HealthChanged;
         public event Action Defeated;
 
-        [SerializeField] private int maxHealth = 5;
-        [SerializeField] private float hitInvulnerability = 0.6f;
+        [SerializeField] private int maxHealth = 8;
+        [SerializeField] private float hitInvulnerability = 0.72f;
 
         private float _invulnerableUntil;
 

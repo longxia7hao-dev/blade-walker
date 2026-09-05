@@ -8,7 +8,11 @@ namespace BladeWalker.Remake.Presentation
     {
         public static void Configure(Camera camera, Transform parent)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            Application.targetFrameRate = 30;
+#else
             Application.targetFrameRate = 60;
+#endif
             QualitySettings.vSyncCount = 0;
             QualitySettings.shadowDistance = 62f;
             QualitySettings.lodBias = 1.35f;

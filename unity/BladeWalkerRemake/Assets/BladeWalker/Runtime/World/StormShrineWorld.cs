@@ -43,18 +43,7 @@ namespace BladeWalker.Remake.World
                 new Color(0.02f, 0.8f, 1.35f));
             _ground = MaterialFactory.Create("ValleyGround", new Color(0.018f, 0.034f, 0.038f), 0f, 0.18f);
 
-            Shader pathShader = Shader.Find("BladeWalker/StormSurface");
-            if (pathShader != null)
-            {
-                _path = new Material(pathShader) { name = "WetStormPath" };
-                _path.SetColor("_BaseColor", new Color(0.045f, 0.09f, 0.105f));
-                _path.SetColor("_EdgeColor", new Color(0.08f, 0.2f, 0.22f));
-                _path.SetFloat("_Wetness", 0.88f);
-            }
-            else
-            {
-                _path = MaterialFactory.Create("WetStormPath", new Color(0.045f, 0.09f, 0.105f), 0.12f, 0.86f);
-            }
+            _path = MaterialFactory.CreatePath("WetStormPath");
         }
 
         private static void CreateGround(Transform parent)
@@ -283,9 +272,7 @@ namespace BladeWalker.Remake.World
             velocity.x = -2.4f;
 
             ParticleSystemRenderer rendererComponent = rain.GetComponent<ParticleSystemRenderer>();
-            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-            if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
-            rendererComponent.material = new Material(shader);
+            rendererComponent.material = MaterialFactory.CreateParticle("StormRainMaterial");
             rendererComponent.renderMode = ParticleSystemRenderMode.Stretch;
             rendererComponent.lengthScale = 7f;
             rendererComponent.velocityScale = 0.18f;

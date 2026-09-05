@@ -116,9 +116,7 @@ namespace BladeWalker.Remake.Presentation
             shape.radius = 0.18f;
 
             ParticleSystemRenderer rendererComponent = particles.GetComponent<ParticleSystemRenderer>();
-            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-            if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
-            Material material = new Material(shader) { name = "SliceParticle" };
+            Material material = MaterialFactory.CreateParticle("SliceParticle");
             if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
             if (material.HasProperty("_Color")) material.SetColor("_Color", color);
             if (material.HasProperty("_EmissionColor"))

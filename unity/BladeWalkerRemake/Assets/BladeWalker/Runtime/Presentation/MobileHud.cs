@@ -15,6 +15,7 @@ namespace BladeWalker.Remake.Presentation
         private GUIStyle _small;
         private GUIStyle _button;
         private GUIStyle _comboStyle;
+        private Font _hudFont;
         private bool _victory;
         private bool _defeat;
 
@@ -137,24 +138,28 @@ namespace BladeWalker.Remake.Presentation
             Texture2D panelTexture = MakeTexture(new Color(0.015f, 0.04f, 0.065f, 0.9f));
             Texture2D buttonTexture = MakeTexture(new Color(0.05f, 0.18f, 0.23f, 0.96f));
             Texture2D attackTexture = MakeTexture(new Color(0.08f, 0.52f, 0.62f, 0.96f));
+            _hudFont = Resources.Load<Font>("Fonts/NotoSansTC-Subset");
 
             _panel = new GUIStyle(GUI.skin.box) { normal = { background = panelTexture } };
             _title = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 30,
+                font = _hudFont,
+                fontSize = 34,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleLeft,
                 normal = { textColor = new Color(0.82f, 0.96f, 1f) },
             };
             _small = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 22,
+                font = _hudFont,
+                fontSize = 26,
                 alignment = TextAnchor.MiddleLeft,
                 normal = { textColor = new Color(0.58f, 0.74f, 0.82f) },
             };
             _button = new GUIStyle(GUI.skin.button)
             {
-                fontSize = 27,
+                font = _hudFont,
+                fontSize = 34,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { background = buttonTexture, textColor = new Color(0.86f, 0.98f, 1f) },
@@ -163,7 +168,7 @@ namespace BladeWalker.Remake.Presentation
             };
             _comboStyle = new GUIStyle(_title)
             {
-                fontSize = 48,
+                fontSize = 52,
                 alignment = TextAnchor.MiddleRight,
                 normal = { textColor = new Color(0.3f, 0.94f, 1f) },
             };
