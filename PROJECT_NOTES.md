@@ -6,9 +6,9 @@
 
 ## 目前狀態
 
-- 最後更新：2026-09-05 16:19（Codex）
-- 進度：Unity Hub 條款已依睿哥明確同意接受，帳號登入與 Personal 授權可用。Unity 6000.0.42f1 WebGL 真實建置成功（14,714,830 bytes）；393×852 直式載入、繁中 HUD、WebGL console 零錯誤及 852×393 轉直式提示均已驗證。待提交 main 並發布至版本化 Pages 路徑。
-- 進行中作業：Codex｜目標為 `unity/BladeWalkerRemake/`、WebGL 建置與 Pages 預覽路徑；開始於 2026-09-04 15:49。
+- 最後更新：2026-09-06 09:59（Codex）
+- 進度：Unity WebGL 手機試玩版已完成並發布至 `https://longxia7hao-dev.github.io/blade-walker/unity-preview/20260905-e5bdec7/`。來源為 main `e5bdec7`，Pages 部署為 `b9817f4`；Unity 6000.0.42f1 真實建置成功（14,714,666 bytes）。線上 393×852 直式載入、繁中 HUD、拖曳操作、console 零 warning/error，以及 852×393「請轉回直式」提示均已驗證；舊 Three.js 根站維持正常。仍建議睿哥以實際 iPhone 補測雙指同時移動＋揮刀及首個手勢後音效。
+- 進行中作業：無。
 
 ## 睿哥的指示與決策
 
@@ -27,6 +27,7 @@
 
 ## 變更日誌（新的在上）
 
+- 2026-09-06｜Codex｜發布版本化 Unity WebGL 試玩版（main `e5bdec7`、gh-pages `b9817f4`）；Pages 建置成功，線上所有 5 個成品檔與根頁皆回應 200，部署 tree 只新增 `.nojekyll` 與 `unity-preview/20260905-e5bdec7/`。以 393×852／852×393 驗證直式遊戲、拖曳操作、零 console warning/error 與橫式提示，舊站未變更。
 - 2026-09-05｜Codex｜完成 Unity 登入／Personal 授權與三輪真實 WebGL 修正：解決 runtime shader 黑畫面、Collider stripping、繁中字型缺字及 WebGL 方向鎖定警告；手機直式與橫向提示測試均通過，最終 browser console 零錯誤。
 - 2026-09-05｜Codex｜安裝 Unity 6000.0.42f1＋WebGL；新增批次建置、安全部署與 iPhone Web 模板；修正 URP Renderer 重複掛載；WebGL 改鎖 30 FPS。`npm run check` 通過，真實 Unity 建置因尚未接受 Hub 條款／無授權而在匯入前停止。
 - 2026-09-04｜Codex｜建立非交易專案共享筆記並登記 Unity WebGL 手機試玩版接手作業。
