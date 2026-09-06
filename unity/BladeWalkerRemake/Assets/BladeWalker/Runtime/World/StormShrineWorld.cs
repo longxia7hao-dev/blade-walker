@@ -32,16 +32,16 @@ namespace BladeWalker.Remake.World
 
         private static void CreateMaterials()
         {
-            _stone = MaterialFactory.Create("ShrineStone", new Color(0.055f, 0.085f, 0.105f), 0.05f, 0.32f);
-            _wood = MaterialFactory.Create("LacqueredWood", new Color(0.18f, 0.025f, 0.035f), 0.08f, 0.58f);
-            _gold = MaterialFactory.Create("AgedGold", new Color(0.56f, 0.34f, 0.07f), 0.82f, 0.68f);
+            _stone = MaterialFactory.Create("ShrineStone", new Color(0.16f, 0.21f, 0.23f), 0.05f, 0.32f);
+            _wood = MaterialFactory.Create("LacqueredWood", new Color(0.38f, 0.065f, 0.075f), 0.08f, 0.58f);
+            _gold = MaterialFactory.Create("AgedGold", new Color(0.72f, 0.48f, 0.13f), 0.82f, 0.68f);
             _crystal = MaterialFactory.Create(
                 "StormCrystal",
                 new Color(0.08f, 0.72f, 0.82f),
                 0.36f,
                 0.92f,
                 new Color(0.02f, 0.8f, 1.35f));
-            _ground = MaterialFactory.Create("ValleyGround", new Color(0.018f, 0.034f, 0.038f), 0f, 0.18f);
+            _ground = MaterialFactory.Create("ValleyGround", new Color(0.075f, 0.11f, 0.1f), 0f, 0.18f);
 
             _path = MaterialFactory.CreatePath("WetStormPath");
         }
@@ -260,7 +260,7 @@ namespace BladeWalker.Remake.World
             main.startSize = new ParticleSystem.MinMaxCurve(0.025f, 0.055f);
             main.maxParticles = 1300;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.startColor = new Color(0.38f, 0.68f, 0.82f, 0.46f);
+            main.startColor = new Color(0.52f, 0.72f, 0.8f, 0.3f);
             ParticleSystem.EmissionModule emission = rain.emission;
             emission.rateOverTime = 480f;
             ParticleSystem.ShapeModule shape = rain.shape;

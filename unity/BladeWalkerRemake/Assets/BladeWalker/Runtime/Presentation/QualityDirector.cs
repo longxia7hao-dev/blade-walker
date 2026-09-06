@@ -19,12 +19,13 @@ namespace BladeWalker.Remake.Presentation
 
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogColor = new Color(0.018f, 0.055f, 0.075f);
-            RenderSettings.fogDensity = 0.012f;
+            RenderSettings.fogColor = new Color(0.24f, 0.38f, 0.46f);
+            RenderSettings.fogDensity = 0.0065f;
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.08f, 0.16f, 0.24f);
-            RenderSettings.ambientEquatorColor = new Color(0.035f, 0.075f, 0.09f);
-            RenderSettings.ambientGroundColor = new Color(0.012f, 0.018f, 0.022f);
+            RenderSettings.ambientSkyColor = new Color(0.42f, 0.58f, 0.72f);
+            RenderSettings.ambientEquatorColor = new Color(0.28f, 0.36f, 0.38f);
+            RenderSettings.ambientGroundColor = new Color(0.13f, 0.17f, 0.15f);
+            RenderSettings.reflectionIntensity = 0.85f;
 
             UniversalAdditionalCameraData cameraData = camera.GetUniversalAdditionalCameraData();
             cameraData.renderPostProcessing = true;
@@ -41,9 +42,9 @@ namespace BladeWalker.Remake.Presentation
 
             Bloom bloom = volume.profile.Add<Bloom>();
             bloom.active = true;
-            bloom.intensity.Override(0.48f);
-            bloom.threshold.Override(1.08f);
-            bloom.scatter.Override(0.58f);
+            bloom.intensity.Override(0.32f);
+            bloom.threshold.Override(1.15f);
+            bloom.scatter.Override(0.5f);
             bloom.highQualityFiltering.Override(false);
 
             Tonemapping tonemapping = volume.profile.Add<Tonemapping>();
@@ -52,15 +53,15 @@ namespace BladeWalker.Remake.Presentation
 
             ColorAdjustments color = volume.profile.Add<ColorAdjustments>();
             color.active = true;
-            color.postExposure.Override(-0.18f);
-            color.contrast.Override(15f);
-            color.saturation.Override(-8f);
-            color.colorFilter.Override(new Color(0.88f, 0.96f, 1f));
+            color.postExposure.Override(0.55f);
+            color.contrast.Override(6f);
+            color.saturation.Override(-2f);
+            color.colorFilter.Override(new Color(1f, 0.98f, 0.92f));
 
             Vignette vignette = volume.profile.Add<Vignette>();
             vignette.active = true;
-            vignette.color.Override(new Color(0.005f, 0.012f, 0.025f));
-            vignette.intensity.Override(0.27f);
+            vignette.color.Override(new Color(0.03f, 0.06f, 0.07f));
+            vignette.intensity.Override(0.12f);
             vignette.smoothness.Override(0.72f);
 
             UniversalRenderPipelineAsset pipeline = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
@@ -79,16 +80,17 @@ namespace BladeWalker.Remake.Presentation
 
         private static void CreateLighting(Transform parent)
         {
-            GameObject moonObject = new GameObject("StormMoonKey");
-            moonObject.transform.SetParent(parent, false);
-            moonObject.transform.rotation = Quaternion.Euler(43f, -28f, 0f);
-            Light moon = moonObject.AddComponent<Light>();
-            moon.type = LightType.Directional;
-            moon.color = new Color(0.46f, 0.72f, 1f);
-            moon.intensity = 1.35f;
-            moon.shadows = LightShadows.Soft;
-            moon.shadowStrength = 0.78f;
-            moon.shadowBias = 0.08f;
+            GameObject sunObject = new GameObject("StormDaySun");
+            sunObject.transform.SetParent(parent, false);
+            sunObject.transform.rotation = Quaternion.Euler(50f, -35f, 0f);
+            Light sun = sunObject.AddComponent<Light>();
+            sun.type = LightType.Directional;
+            sun.color = new Color(1f, 0.93f, 0.8f);
+            sun.intensity = 1.75f;
+            sun.shadows = LightShadows.Soft;
+            sun.shadowStrength = 0.58f;
+            sun.shadowBias = 0.08f;
+            RenderSettings.sun = sun;
 
             GameObject rimObject = new GameObject("WarmShrineRim");
             rimObject.transform.SetParent(parent, false);
@@ -96,8 +98,8 @@ namespace BladeWalker.Remake.Presentation
             Light rim = rimObject.AddComponent<Light>();
             rim.type = LightType.Point;
             rim.color = new Color(1f, 0.52f, 0.17f);
-            rim.intensity = 8f;
-            rim.range = 34f;
+            rim.intensity = 6f;
+            rim.range = 42f;
             rim.shadows = LightShadows.None;
         }
     }

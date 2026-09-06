@@ -85,10 +85,12 @@ namespace BladeWalker.Remake
         private static void ConfigureSkybox()
         {
             Material sky = MaterialFactory.CreateSkybox("StormSkyRuntime");
-            if (sky.HasProperty("_SkyTint")) sky.SetColor("_SkyTint", new Color(0.035f, 0.11f, 0.18f));
-            if (sky.HasProperty("_GroundColor")) sky.SetColor("_GroundColor", new Color(0.008f, 0.018f, 0.025f));
-            if (sky.HasProperty("_AtmosphereThickness")) sky.SetFloat("_AtmosphereThickness", 0.42f);
-            if (sky.HasProperty("_Exposure")) sky.SetFloat("_Exposure", 0.56f);
+            if (sky.HasProperty("_SkyTint")) sky.SetColor("_SkyTint", new Color(0.32f, 0.58f, 0.78f));
+            if (sky.HasProperty("_GroundColor")) sky.SetColor("_GroundColor", new Color(0.14f, 0.21f, 0.18f));
+            if (sky.HasProperty("_AtmosphereThickness")) sky.SetFloat("_AtmosphereThickness", 0.72f);
+            if (sky.HasProperty("_SunSize")) sky.SetFloat("_SunSize", 0.04f);
+            if (sky.HasProperty("_SunSizeConvergence")) sky.SetFloat("_SunSizeConvergence", 6f);
+            if (sky.HasProperty("_Exposure")) sky.SetFloat("_Exposure", 1.15f);
             RenderSettings.skybox = sky;
         }
     }

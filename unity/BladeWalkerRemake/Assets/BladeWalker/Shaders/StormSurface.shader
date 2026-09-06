@@ -90,7 +90,7 @@ Shader "BladeWalker/StormSurface"
                 half specular = pow(saturate(dot(normalWS, halfDirection)), lerp(28.0h, 110.0h, _Wetness));
                 half puddle = smoothstep(0.72h, 0.94h, stoneNoise) * _Wetness;
 
-                half3 color = albedo * (0.18h + diffuse * mainLight.shadowAttenuation * mainLight.color);
+                half3 color = albedo * (0.34h + diffuse * mainLight.shadowAttenuation * mainLight.color);
                 color += mainLight.color * specular * (0.2h + puddle * 0.9h);
                 color += _EdgeColor.rgb * puddle * 0.12h;
                 color = MixFog(color, input.fogFactor);

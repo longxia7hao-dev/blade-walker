@@ -6,14 +6,15 @@
 
 ## 目前狀態
 
-- 最後更新：2026-09-06 09:59（Codex）
-- 進度：Unity WebGL 手機試玩版已完成並發布至 `https://longxia7hao-dev.github.io/blade-walker/unity-preview/20260905-e5bdec7/`。來源為 main `e5bdec7`，Pages 部署為 `b9817f4`；Unity 6000.0.42f1 真實建置成功（14,714,666 bytes）。線上 393×852 直式載入、繁中 HUD、拖曳操作、console 零 warning/error，以及 852×393「請轉回直式」提示均已驗證；舊 Three.js 根站維持正常。仍建議睿哥以實際 iPhone 補測雙指同時移動＋揮刀及首個手勢後音效。
-- 進行中作業：無。
+- 最後更新：2026-09-06 10:42（Codex）
+- 進度：Unity WebGL 手機試玩版已發布；睿哥回報目前環境太暗、人物與魔物難以辨識，正在調整為日間暴風神社並準備新版 WebGL。既有版本仍在 `https://longxia7hao-dev.github.io/blade-walker/unity-preview/20260905-e5bdec7/`。
+- 進行中作業：Codex｜目標為日間環境、人物／魔物可讀性、WebGL 重建與版本化 Pages 發布；開始於 2026-09-06 10:42。
 
 ## 睿哥的指示與決策
 
 - 先製作「Unity WebGL 手機試玩版」，讓 iPhone 可直接以網址測試。
 - Unity 重製版需保留既有 Three.js/PWA 網頁遊戲，不可直接覆蓋舊版入口。
+- 背景環境改為日間，提高人物與魔物的辨識度；由 Codex 完成後再交由睿哥以 iPhone 測試。
 
 ## 踩坑與注意事項
 

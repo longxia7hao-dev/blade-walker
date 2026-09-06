@@ -142,9 +142,9 @@ namespace BladeWalker.Remake.Editor
 
             Material path = EnsureMaterialAsset(PathMaterialPath, pathShader);
             if (path.HasProperty("_BaseColor"))
-                path.SetColor("_BaseColor", new Color(0.045f, 0.09f, 0.105f));
+                path.SetColor("_BaseColor", new Color(0.12f, 0.18f, 0.19f));
             if (path.HasProperty("_EdgeColor"))
-                path.SetColor("_EdgeColor", new Color(0.08f, 0.2f, 0.22f));
+                path.SetColor("_EdgeColor", new Color(0.24f, 0.38f, 0.4f));
             if (path.HasProperty("_Wetness")) path.SetFloat("_Wetness", 0.88f);
             if (path.HasProperty("_Metallic")) path.SetFloat("_Metallic", 0.12f);
             if (path.HasProperty("_Smoothness")) path.SetFloat("_Smoothness", 0.86f);

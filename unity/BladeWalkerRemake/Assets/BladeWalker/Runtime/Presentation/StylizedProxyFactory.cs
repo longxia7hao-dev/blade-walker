@@ -16,9 +16,9 @@ namespace BladeWalker.Remake.Presentation
                 return productionHero;
 
             GameObject root = new GameObject("Hero_Baishuang_Proxy");
-            Material cloth = MaterialFactory.Create("BaishuangCloth", new Color(0.05f, 0.09f, 0.16f), 0.05f, 0.42f);
-            Material armour = MaterialFactory.Create("BaishuangArmour", new Color(0.12f, 0.28f, 0.36f), 0.72f, 0.76f);
-            Material pale = MaterialFactory.Create("BaishuangSkin", new Color(0.78f, 0.83f, 0.86f), 0f, 0.38f);
+            Material cloth = MaterialFactory.Create("BaishuangCloth", new Color(0.12f, 0.23f, 0.38f), 0.05f, 0.42f);
+            Material armour = MaterialFactory.Create("BaishuangArmour", new Color(0.2f, 0.48f, 0.58f), 0.72f, 0.76f);
+            Material pale = MaterialFactory.Create("BaishuangSkin", new Color(0.85f, 0.84f, 0.79f), 0f, 0.38f);
             Material frost = MaterialFactory.Create(
                 "FrostEdge",
                 new Color(0.36f, 0.86f, 1f),
@@ -78,7 +78,7 @@ namespace BladeWalker.Remake.Presentation
         private static GameObject CreateStalker()
         {
             GameObject root = EnemyRoot("GroundStalker", 0.62f, 1.45f);
-            Material shell = MaterialFactory.Create("StalkerShell", new Color(0.11f, 0.28f, 0.24f), 0.35f, 0.54f);
+            Material shell = MaterialFactory.Create("StalkerShell", new Color(0.2f, 0.45f, 0.36f), 0.35f, 0.54f);
             Material glow = MaterialFactory.Create("StalkerGlow", new Color(0.25f, 0.95f, 0.78f), 0.15f, 0.85f, new Color(0.05f, 0.9f, 0.62f));
             MaterialFactory.Primitive("Body", PrimitiveType.Capsule, root.transform, new Vector3(0f, 0.72f, 0f), new Vector3(1f, 0.78f, 0.92f), shell);
             MaterialFactory.Primitive("Core", PrimitiveType.Sphere, root.transform, new Vector3(0f, 0.85f, 0.5f), new Vector3(0.28f, 0.36f, 0.18f), glow);
@@ -89,7 +89,7 @@ namespace BladeWalker.Remake.Presentation
         private static GameObject CreateHopper()
         {
             GameObject root = EnemyRoot("Hopper", 0.72f, 1.35f);
-            Material gel = MaterialFactory.Create("HopperGel", new Color(0.62f, 0.24f, 0.08f), 0.05f, 0.72f, new Color(0.18f, 0.025f, 0f));
+            Material gel = MaterialFactory.Create("HopperGel", new Color(0.78f, 0.35f, 0.08f), 0.05f, 0.72f, new Color(0.22f, 0.04f, 0f));
             Material crystal = MaterialFactory.Create("HopperCrystal", new Color(0.18f, 0.9f, 1f), 0.42f, 0.86f, new Color(0.05f, 0.75f, 1.2f));
             MaterialFactory.Primitive("GelBody", PrimitiveType.Sphere, root.transform, new Vector3(0f, 0.62f, 0f), new Vector3(1.35f, 0.92f, 1.12f), gel);
             MaterialFactory.Primitive("FootL", PrimitiveType.Sphere, root.transform, new Vector3(-0.5f, 0.18f, 0.05f), new Vector3(0.48f, 0.3f, 0.62f), gel);
@@ -101,7 +101,7 @@ namespace BladeWalker.Remake.Presentation
         private static GameObject CreateWraith()
         {
             GameObject root = EnemyRoot("AerialWraith", 0.66f, 1.8f);
-            Material mist = MaterialFactory.Create("WraithMist", new Color(0.08f, 0.18f, 0.3f), 0f, 0.55f);
+            Material mist = MaterialFactory.Create("WraithMist", new Color(0.22f, 0.38f, 0.58f), 0f, 0.55f);
             Material eye = MaterialFactory.Create("WraithEye", new Color(0.26f, 0.94f, 1f), 0.2f, 0.9f, new Color(0.08f, 1.1f, 1.9f));
             MaterialFactory.Primitive("Head", PrimitiveType.Sphere, root.transform, new Vector3(0f, 0.7f, 0f), new Vector3(0.9f, 0.82f, 0.72f), mist);
             MaterialFactory.Primitive("Tail", PrimitiveType.Capsule, root.transform, new Vector3(0f, -0.12f, -0.05f), new Vector3(0.58f, 0.82f, 0.55f), mist);
@@ -115,7 +115,7 @@ namespace BladeWalker.Remake.Presentation
         private static GameObject CreateFlanker()
         {
             GameObject root = EnemyRoot("SideFlanker", 0.54f, 1.7f);
-            Material armour = MaterialFactory.Create("FlankerArmour", new Color(0.22f, 0.08f, 0.12f), 0.58f, 0.46f);
+            Material armour = MaterialFactory.Create("FlankerArmour", new Color(0.4f, 0.13f, 0.18f), 0.58f, 0.46f);
             Material ember = MaterialFactory.Create("FlankerEmber", new Color(1f, 0.26f, 0.08f), 0.2f, 0.82f, new Color(1.4f, 0.11f, 0.02f));
             MaterialFactory.Primitive("Body", PrimitiveType.Capsule, root.transform, new Vector3(0f, 0.84f, 0f), new Vector3(0.76f, 0.95f, 0.68f), armour);
             MaterialFactory.Primitive("HornL", PrimitiveType.Cylinder, root.transform, new Vector3(-0.28f, 1.66f, 0f), new Vector3(0.11f, 0.4f, 0.11f), ember, new Vector3(0f, 0f, -28f));
@@ -128,7 +128,7 @@ namespace BladeWalker.Remake.Presentation
         private static GameObject CreateArtillery()
         {
             GameObject root = EnemyRoot("CrystalArtillery", 0.62f, 1.65f);
-            Material stone = MaterialFactory.Create("ArtilleryStone", new Color(0.12f, 0.12f, 0.2f), 0.35f, 0.38f);
+            Material stone = MaterialFactory.Create("ArtilleryStone", new Color(0.25f, 0.27f, 0.38f), 0.35f, 0.38f);
             Material crystal = MaterialFactory.Create("ArtilleryCrystal", new Color(0.18f, 0.64f, 1f), 0.45f, 0.9f, new Color(0.02f, 0.55f, 1.6f));
             MaterialFactory.Primitive("Body", PrimitiveType.Capsule, root.transform, new Vector3(0f, 0.82f, 0f), new Vector3(0.9f, 0.94f, 0.82f), stone);
             MaterialFactory.Primitive("Cannon", PrimitiveType.Cylinder, root.transform, new Vector3(0f, 1.12f, 0.72f), new Vector3(0.22f, 0.75f, 0.22f), crystal, new Vector3(90f, 0f, 0f));
@@ -139,8 +139,8 @@ namespace BladeWalker.Remake.Presentation
         private static GameObject CreateSlimeKing()
         {
             GameObject root = EnemyRoot("CrystalSlimeKing", 1.9f, 4.2f);
-            Material gel = MaterialFactory.Create("KingAmberGel", new Color(0.42f, 0.15f, 0.025f), 0.05f, 0.78f, new Color(0.14f, 0.025f, 0f));
-            Material gold = MaterialFactory.Create("KingGold", new Color(0.62f, 0.38f, 0.08f), 0.85f, 0.78f);
+            Material gel = MaterialFactory.Create("KingAmberGel", new Color(0.62f, 0.25f, 0.04f), 0.05f, 0.78f, new Color(0.18f, 0.035f, 0f));
+            Material gold = MaterialFactory.Create("KingGold", new Color(0.78f, 0.52f, 0.12f), 0.85f, 0.78f);
             Material crystal = MaterialFactory.Create("KingJadeCrystal", new Color(0.12f, 0.82f, 0.88f), 0.4f, 0.92f, new Color(0.04f, 0.9f, 1.5f));
             MaterialFactory.Primitive("RoyalGel", PrimitiveType.Sphere, root.transform, new Vector3(0f, 1.75f, 0f), new Vector3(3.5f, 2.75f, 3.15f), gel);
             MaterialFactory.Primitive("GoldBand", PrimitiveType.Cylinder, root.transform, new Vector3(0f, 2.7f, 0f), new Vector3(2.2f, 0.18f, 2.2f), gold);
