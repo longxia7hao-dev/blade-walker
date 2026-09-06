@@ -6,9 +6,9 @@
 
 ## 目前狀態
 
-- 最後更新：2026-09-06 10:42（Codex）
-- 進度：Unity WebGL 手機試玩版已發布；睿哥回報目前環境太暗、人物與魔物難以辨識，正在調整為日間暴風神社並準備新版 WebGL。既有版本仍在 `https://longxia7hao-dev.github.io/blade-walker/unity-preview/20260905-e5bdec7/`。
-- 進行中作業：Codex｜目標為日間環境、人物／魔物可讀性、WebGL 重建與版本化 Pages 發布；開始於 2026-09-06 10:42。
+- 最後更新：2026-09-06 10:51（Codex）
+- 進度：日間版 Unity WebGL 手機試玩已完成並發布至 `https://longxia7hao-dev.github.io/blade-walker/unity-preview/20260906-6526178-daylight/`。來源為 main `6526178`，Pages 部署為 `39298c3`；Unity 6000.0.42f1 真實建置成功（14,713,253 bytes）。線上 393×852 驗證確認日間天空、路面、人物與魔物可辨識，繁中介面正常且 console 零 warning/error；舊 Three.js 根站及上一版預覽均保留。
+- 進行中作業：無。
 
 ## 睿哥的指示與決策
 
@@ -28,6 +28,7 @@
 
 ## 變更日誌（新的在上）
 
+- 2026-09-06｜Codex｜依睿哥回饋把 Unity 暴風神社改為日間：提升程序天空曝光、暖色太陽、環境光與霧色，降低暗角／對比，提亮路面、建築、白霜及各類魔物材質，同時保留雨景。真實 WebGL、`npm run check`、本機及線上 393×852 均通過，發布 main `6526178`／gh-pages `39298c3`；舊站未變更。
 - 2026-09-06｜Codex｜發布版本化 Unity WebGL 試玩版（main `e5bdec7`、gh-pages `b9817f4`）；Pages 建置成功，線上所有 5 個成品檔與根頁皆回應 200，部署 tree 只新增 `.nojekyll` 與 `unity-preview/20260905-e5bdec7/`。以 393×852／852×393 驗證直式遊戲、拖曳操作、零 console warning/error 與橫式提示，舊站未變更。
 - 2026-09-05｜Codex｜完成 Unity 登入／Personal 授權與三輪真實 WebGL 修正：解決 runtime shader 黑畫面、Collider stripping、繁中字型缺字及 WebGL 方向鎖定警告；手機直式與橫向提示測試均通過，最終 browser console 零錯誤。
 - 2026-09-05｜Codex｜安裝 Unity 6000.0.42f1＋WebGL；新增批次建置、安全部署與 iPhone Web 模板；修正 URP Renderer 重複掛載；WebGL 改鎖 30 FPS。`npm run check` 通過，真實 Unity 建置因尚未接受 Hub 條款／無授權而在匯入前停止。
