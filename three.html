@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0b0610" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="description" content="魔刃行者：為手機打造的 3D 斬魔冒險遊戲。" />
+    <title>魔刃行者</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+    <script type="module" crossorigin src="./assets/index-xhDlqDPP.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DllhM73Q.css">
+  </head>
+  <body>
+    <div id="game-root">
+      <div id="world-bg" aria-hidden="true">
+        <img id="world-bg-img" src="./art/world-path.jpg" alt="" />
+      </div>
+      <div id="path-strip" aria-hidden="true"></div>
+      <canvas id="scene" role="application" aria-label="魔刃行者戰鬥畫面"></canvas>
+      <canvas id="fx" aria-hidden="true"></canvas>
+      <div id="weapon-layer" aria-hidden="true">
+        <div id="weapon-wrap" class="sword" data-char="sword">
+          <img id="weapon-art" alt="" hidden />
+          <div id="muzzle-flash"></div>
+          <div id="staff-glow"></div>
+        </div>
+      </div>
+      <div id="hurt-flash"></div>
+      <div id="dodge-flash"></div>
+      <div id="vignette"></div>
+      <div id="dodge-left" class="dodge-edge left hidden" aria-hidden="true"></div>
+      <div id="dodge-right" class="dodge-edge right hidden" aria-hidden="true"></div>
+      <div id="dodge-strip" class="dodge-strip hidden" aria-hidden="true">
+        <span class="dodge-arrow left">‹</span>
+        <span class="dodge-strip-label">畫面下方左右滑動</span>
+        <span class="dodge-arrow right">›</span>
+      </div>
+      <button id="btn-ult" class="ult-btn hidden" type="button" aria-label="絕招">
+        <span class="ult-pie" aria-hidden="true"></span>
+        <span class="ult-glyph">絕</span>
+        <span class="ult-cd"></span>
+      </button>
+      <p id="ult-hint" class="ult-hint hidden">點擊絕招，冷卻十秒</p>
+      <div id="level-flash"></div>
+      <div id="arena-banner" class="hidden"></div>
+      <div id="warn-banner" class="hidden"></div>
+      <div id="fork-choice" class="hidden"></div>
+
+      <div id="hud" class="screen hidden">
+        <div class="hud-progress">
+          <div class="progress-track">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="distance-label" class="distance-label">暴風小徑 · 0%</div>
+        </div>
+        <div class="hud-top">
+          <div class="hud-hp">
+            <div class="party-icon" aria-hidden="true">
+              <img id="party-portrait" src="./art/baishuang.webp" alt="" />
+            </div>
+            <div>
+              <span class="hud-label">生命</span>
+              <div id="hp-hearts" class="hearts"></div>
+            </div>
+          </div>
+          <div class="hud-mid">
+            <div id="combo-display" class="combo">COMBO <span>x1</span></div>
+            <div id="score-display" class="score">0</div>
+          </div>
+          <div class="hud-right">
+            <button id="btn-pause" class="icon-btn" type="button" aria-label="暫停">❚❚</button>
+          </div>
+        </div>
+        <div id="power-hud" class="power-hud">
+          <span id="pip-atk" class="power-pip atk">攻x0</span>
+          <span id="pip-shield" class="power-pip shield">盾x0</span>
+          <span id="pip-spd" class="power-pip spd">速x0</span>
+        </div>
+        <div id="weapon-hint" class="weapon-hint">滑動螢幕斬擊</div>
+        <div id="pickup-hint" class="pickup-hint hidden">撿取膠囊強化攻擊與防禦</div>
+        <div id="dodge-hint" class="dodge-hint hidden">畫面下方左右滑動</div>
+        <div id="float-layer"></div>
+      </div>
+
+      <div id="screen-title" class="screen overlay">
+        <div class="title-wrap">
+          <div class="title-hero">
+            <p class="title-kicker">幻史斷章</p>
+            <h1 class="game-title">魔刃行者</h1>
+            <p class="game-sub">自動行走·斬魔冒險</p>
+          </div>
+          <div class="title-thumb-zone">
+            <button id="btn-start" class="cta gem-btn" type="button">開始獵魔</button>
+            <div class="title-audio">
+              <button id="btn-mute-sfx" class="audio-chip" type="button">音效：開</button>
+              <button id="btn-mute-bgm" class="audio-chip" type="button">音樂：開</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-char" class="screen overlay hidden">
+        <div class="panel panel-flow">
+          <header class="panel-head">
+            <h2>選擇獵魔者</h2>
+            <p class="panel-sub">每位角色攻擊方式截然不同</p>
+          </header>
+          <div class="char-grid" id="char-grid" data-scroll></div>
+          <div class="panel-foot">
+            <button id="btn-depart" class="cta gem-btn" type="button" disabled>出發</button>
+            <button id="btn-back-title" class="text-btn" type="button">返回</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-stage" class="screen overlay hidden">
+        <div class="panel panel-flow">
+          <header class="panel-head">
+            <h2>選擇獵場</h2>
+            <p class="panel-sub" id="stage-char-label">白霜 · 劍士</p>
+          </header>
+          <div class="stage-list" id="stage-list" data-scroll></div>
+          <div class="panel-foot">
+            <button id="btn-enter-stage" class="cta gem-btn" type="button" disabled>進入關卡</button>
+            <button id="btn-back-char" class="text-btn" type="button">換角色</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-tutorial" class="screen overlay hidden">
+        <div class="panel tutorial-panel">
+          <h2 id="tut-title">試劍</h2>
+          <p id="tut-body" class="panel-sub"></p>
+          <div id="tut-art" class="tut-art"></div>
+          <p class="tut-timer" id="tut-timer">可略過 · 20 秒後自動開始</p>
+          <button id="btn-skip-tut" class="cta gem-btn" type="button">略過教學，出戰</button>
+        </div>
+      </div>
+
+      <div id="screen-pause" class="screen overlay hidden">
+        <div class="panel">
+          <h2>暫停</h2>
+          <p class="panel-sub">旅途未盡，魔物仍在</p>
+          <div class="pause-stack">
+            <button id="btn-resume" class="cta gem-btn" type="button">繼續獵魔</button>
+            <button id="btn-pause-retry" class="ghost-btn" type="button">重試本關</button>
+            <button id="btn-pause-quit" class="ghost-btn" type="button">回獵場</button>
+            <div class="title-audio">
+              <button id="btn-pause-sfx" class="audio-chip" type="button">音效：開</button>
+              <button id="btn-pause-bgm" class="audio-chip" type="button">音樂：開</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-win" class="screen overlay hidden">
+        <div class="panel result">
+          <p class="result-kicker">STAGE CLEAR</p>
+          <h2>關卡通關</h2>
+          <p id="win-stats" class="panel-sub"></p>
+          <p id="win-best" class="best-line"></p>
+          <div class="row-btns">
+            <button id="btn-next" class="cta gem-btn" type="button">下一關</button>
+            <button id="btn-win-home" class="ghost-btn" type="button">回獵場</button>
+          </div>
+          <p class="hotkey-hint">R 重試本關</p>
+        </div>
+      </div>
+
+      <div id="screen-lose" class="screen overlay hidden">
+        <div class="panel result">
+          <p class="result-kicker dark">SLAIN</p>
+          <h2>獵魔失敗</h2>
+          <p id="lose-stats" class="panel-sub"></p>
+          <div class="row-btns">
+            <button id="btn-retry" class="cta gem-btn" type="button">重試</button>
+            <button id="btn-lose-char" class="ghost-btn" type="button">換角色</button>
+          </div>
+          <p class="hotkey-hint">R 重試 · 空白鍵 暫停</p>
+        </div>
+      </div>
+
+      <div id="model-loading" role="status" aria-live="polite" aria-label="遊戲載入中">
+        <div class="loading-content">
+          <span class="loading-rune" aria-hidden="true"></span>
+          <p>展開獵魔卷軸…</p>
+          <small>首次載入後即可更快進入</small>
+        </div>
+      </div>
+      <div id="runtime-issue" class="runtime-issue hidden" role="alert" aria-live="assertive">
+        <div class="runtime-card">
+          <p class="result-kicker dark">SYSTEM NOTICE</p>
+          <h2 id="runtime-issue-title">無法啟用 3D 畫面</h2>
+          <p id="runtime-issue-body" class="panel-sub"></p>
+          <button id="btn-runtime-reload" class="cta gem-btn" type="button">重新載入</button>
+        </div>
+      </div>
+      <div id="install-hint" class="install-hint hidden" role="status">
+        <span>主畫面：Safari 點「分享」→「加入主畫面」即可全螢幕遊玩</span>
+        <button id="btn-dismiss-install" type="button" aria-label="關閉">✕</button>
+      </div>
+    </div>
+    <noscript>《魔刃行者》需要啟用 JavaScript 才能遊玩。</noscript>
+  </body>
+</html>
