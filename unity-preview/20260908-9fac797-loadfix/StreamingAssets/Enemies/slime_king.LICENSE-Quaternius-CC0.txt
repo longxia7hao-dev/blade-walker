@@ -1,0 +1,16 @@
+Quaternius — Goleling Evolved, Green Spiky Blob, Mushroom King
+
+License: Creative Commons Zero (CC0) 1.0 Universal — Public Domain
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Author / distributor: Quaternius — https://quaternius.com
+Ultimate Monsters pack: https://quaternius.com/packs/ultimatemonsters.html
+Poly Pizza: https://poly.pizza/bundle/Ultimate-Monsters-Bundle-5oyGWAmOB6
+
+Models in this folder:
+  Goleling Evolved (primary): https://poly.pizza/m/iHEuXiH6Aj
+  Green Spiky Blob (alt): https://poly.pizza/m/IoWG5F9WUc
+  Mushroom King (alt): https://poly.pizza/m/grnFTziU8u
+
+This content may be used in personal, educational, and commercial projects
+without attribution (attribution appreciated but not required).
