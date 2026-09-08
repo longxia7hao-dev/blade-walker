@@ -1,3 +1,4 @@
+using BladeWalker.Remake;
 using BladeWalker.Remake.Presentation;
 using BladeWalker.Remake.World;
 using UnityEngine;
@@ -34,6 +35,12 @@ namespace BladeWalker.Remake.Combat
         private void Update()
         {
             if (_camera == null || _combat == null) return;
+
+            if (GameBootstrap.Instance != null && !GameBootstrap.Instance.AllowsGameplayInput)
+            {
+                CancelStroke();
+                return;
+            }
 
             if (_runner != null && _runner.BranchDecisionOpen)
             {
